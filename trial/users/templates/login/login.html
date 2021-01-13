@@ -1,0 +1,65 @@
+<html>
+  <head>
+    <title>Login</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static "public/css/main.css" %}">
+  </head>
+  <body>
+    {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+    <form id="doLogin" action="{% url "users:doLogin" %}" method="POST">
+      {% csrf_token %}
+      用户名/邮箱: <input name="name" id="name"></input><p class="necessary">*</p></br>
+      密码: <input name="password" type="password" id="pwd"></input><p class="necessary">*</p></br>
+      <!-- TODO: send an email for activating -->
+      <input type="submit" value="submit">
+    </form>
+    <a href="{% url "users:signup" %}" id="signup">注册</a>
+
+    <script type="text/javascript">
+      window.addEventListener("load", function () {
+        function sendData() {
+          const necessary = {
+            "name": "用户名", 
+            "pwd": "密码", 
+          }
+          for (const n in necessary) {
+            var elem = document.getElementById(n);
+            if (elem.value=="") {
+              alert("请输入"+necessary[n]);
+              return;
+            }
+          }
+
+          var url = form.action;
+          var XHR = new XMLHttpRequest();
+          var FD  = new FormData(form);
+          XHR.onreadystatechange = function() {
+            if (XHR.readyState==4 && XHR.status==200) {
+              result = XHR.responseText.replaceAll("&quot;", "\"");
+              result = JSON.parse(result);
+              if (result["status"]) {
+                if (result["status"] == 1) {
+                  //confirm("登陆成功");
+                  document.cookie = "utk="+result['data']['token'];
+                  window.location.href = result['data']['href'];
+                } else {
+                  alert("[Debug] "+result["reason"])  // TODO
+                }
+              } else {
+                alert("[Debug] POST error");  // TODO
+              }
+            }
+          }
+          XHR.open("POST", url);
+          XHR.send(FD);
+        }
+
+        var form = document.getElementById("doLogin");
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+          sendData();
+        });
+      });
+    </script>
+  </body>
+</html>
