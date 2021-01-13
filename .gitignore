@@ -1,2 +1,4 @@
 tags
 *.swp
+*.code-workspace
+venv/
