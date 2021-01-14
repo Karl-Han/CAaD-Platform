@@ -76,7 +76,7 @@ def doSignup(request):
     # TODO: more checks here (safer password & email format)
     # save to database
     try:
-        u = User(  # TODO: error here
+        u = User(
             nickname = data['nickname'],
             password = data['password'],
             email = data['email'],
@@ -181,6 +181,30 @@ class Visitor:
     nickname = 'Visitor'
     token = 'None'
 
+def checkTokenTimeoutOrLogout(user):
+    if len(user.token) != 128:
+        return False
+    result = isTokenTimeout(user)
+    if result:
+        # do logout
+        hObj = SHA3_512.new()
+        hObj.update(bytes(user.nickname, 'utf8')+os.urandom(32))
+        token = hObj.hexdigest()
+        user.token = token[:-2]  # len->126, reduce database operations
+        user.save()  # except?
+    return result
+
+def checkUserLoginOrVisitor(request):
+    if (not 'utk' in request.COOKIES) or len(request.COOKIES['utk'])!=128:
+        return -1, Visitor()
+
+    user = User.objects.filter(token=request.COOKIES['utk'])
+    if not user.exists():
+        return -2, Visitor()
+
+    user = user[0]
+    return 1, user
+
 def profile(request, ownerName):
     # TODO: render self or other (template)
     owner = get_object_or_404(User, nickname=ownerName)
@@ -194,30 +218,24 @@ def profile(request, ownerName):
         user = Visitor()
 
     if user.token!='' and len(user.token)==128 and ownerName==user.nickname:
-        if isTokenTimeout(user):
-            # do logout
-            hObj = SHA3_512.new()
-            hObj.update(bytes(user.nickname, 'utf8')+os.urandom(32))
-            token = hObj.hexdigest()
-            user.token = token[:-2]  # len->126, reduce database operations
-            try:
-                user.save()
-            except:
+        try:
+            if checkTokenTimeoutOrLogout(user):
                 data = {
-                    'status': -9,
-                    'reason': 'Something wrong, please contact developer',
+                    'user': Visitor(),  # logout
+                    'owner': owner
                 }
-                return render(request, 'info.html', {'info': json.dumps(data)})
+                return render(request, 'profile/other.html', data)
+            else:
+                data = {
+                    'user': user
+                }
+                return render(request, 'profile/self.html', data)
+        except:
             data = {
-                'user': Visitor(),  # logout
-                'owner': owner
+                'status': -9,
+                'reason': 'Something wrong, please contact developer',
             }
-            return render(request, 'profile/other.html', data)
-        else:
-            data = {
-                'user': user
-            }
-            return render(request, 'profile/self.html', data)
+            return render(request, 'info.html', {'info': json.dumps(data)})
     else:
         data = {
             'user': user,

@@ -1,26 +1,24 @@
 <html>
   <head>
-    <title>Login</title>
+    <title>Create Course</title>
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static "public/css/main.css" %}">
   </head>
   <body>
     {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
-    <form id="doLogin" action="{% url "users:doLogin" %}" method="POST">
+    <form id="doCreate" action="{% url "courses:doCreate" %}" method="POST">
       {% csrf_token %}
-      用户名/邮箱: <input name="name" id="name"></input><p class="necessary">*</p></br>
-      密码: <input name="password" type="password" id="pwd"></input><p class="necessary">*</p></br>
-      <!-- TODO: send an email for activating -->
+      课程名: <input name="name" id="name"></input><p class="necessary">*</p></br>
+      描述: <input name="description" id="description"></input><p class="necessary">*</p></br>
       <input type="submit" value="submit">
     </form>
-    <a href="{% url "users:signup" %}" id="signup">注册</a>
 
     <script type="text/javascript">
       window.addEventListener("load", function () {
         function sendData() {
           const necessary = {
-            "name": "用户名", 
-            "pwd": "密码", 
+            "name": "课程名", 
+            "description": "描述", 
           }
           for (const n in necessary) {
             var elem = document.getElementById(n);
@@ -36,12 +34,12 @@
           XHR.onreadystatechange = function() {
             if (XHR.readyState==4 && XHR.status==200) {
               result = XHR.responseText.replaceAll("&quot;", "\"");
+              console.log(result);
               result = JSON.parse(result);
               if (result["status"]) {
                 if (result["status"] == 1) {
-                  //confirm("登陆成功");
-                  document.cookie = "utk="+result['data']['token']+"; path=/";
-                  window.location.href = result['data']['href'];
+                  confirm("创建成功");
+                  window.location.href = result["href"];
                 } else {
                   alert("[Debug] "+result["reason"])  // TODO
                 }
@@ -54,7 +52,7 @@
           XHR.send(FD);
         }
 
-        var form = document.getElementById("doLogin");
+        var form = document.getElementById("doCreate");
         form.addEventListener("submit", function (event) {
           event.preventDefault();
           sendData();
