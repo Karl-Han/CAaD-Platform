@@ -1,2 +1,9 @@
+<a href="{% url "courses:create" %}">创建课程</a>
 
-<a href="{% url "courses:createCourse" %}">创建课程</a>
+{% if pcourses %}
+    <ul>
+    {% for course in pcourses %}
+    <li><a href="/courses/{{ course.name }}">{{ course.name }}: {{ course.popularity }}</a></li>
+    {% endfor %}
+    </ul>
+{% endif %}

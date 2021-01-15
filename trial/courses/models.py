@@ -15,7 +15,7 @@ class Course(models.Model):
     status = models.IntegerField('course status')
     types = models.IntegerField('course types')  # reserved
     create_date = models.DateTimeField('date created up')
-    hot = models.IntegerField('hot')  # for recommending
+    popularity = models.IntegerField('popularity')  # for recommending
 
 class CourseMember(models.Model):
     cid = models.IntegerField('course id')

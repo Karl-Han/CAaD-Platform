@@ -14,20 +14,23 @@ python manage.py migrate
 
 python manage.py runserver
 #python manage.py shell
-
 ```
 
 ## Finished
 - signup && login && naive profile
 - create course && naive course page
+- course list(index) && join course
 
 ## TODO
 - CSS for app:users
 - more details in profile
 - tests
 - limit string length in frontend form
-- course list && join course
+- member list in course page (API: getCM)
 - (more TODOs in code files)
+
+## Optimization
+- Put codes for checking users(privilege) in a function(reuse)
 
 ## Index
 - /users/signup: signup page
@@ -36,7 +39,7 @@ python manage.py runserver
 - /courses/: courses index
 - /courses/createCourse: create course
 - /courses/\<course name\>: course page
-
+- /courses/\<course name\>/join: join course api(for visitor)
 
 ## Addition
 ### signed up users (for testing)
