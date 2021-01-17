@@ -1,13 +1,15 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from django.utils import timezone
+from django.core.exceptions import PermissionDenied
 
 from users.models import User
-from users.views import Visitor, checkTokenTimeoutOrLogout, checkUserLoginOrVisitor
 from courses.models import Course, CourseMember
 
 import json
 import random
+
+from utils.check import info, Visitor, checkTokenTimeoutOrLogout, checkUserLoginOrVisitor, checkReqData, checkUser
 
 # Create your views here.
 def index(request):
@@ -21,45 +23,22 @@ def createCourse(request):
     return render(request, 'create/create.html', {})
 
 def doCreate(request):
+    if request.method != 'POST':
+        raise PermissionDenied
+
     # checks
-    try:
-        request.POST['name']
-        request.POST['description']
-    except:
-        data = {
-            'status': -1,
-            'reason': 'Hacker? 110!'
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+    crd_st, rd = checkReqData(request, post=['name', 'description'])
+    if crd_st == -1:
+        return rd
 
-    st, user = checkUserLoginOrVisitor(request)
-    if st == -1:
-        data = {
-            'status': -2,
-            'reason': 'Please login!'
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
-    elif st == -2:
-        data = {
-            'status': -3,
-            'reason': 'Hacker?110!'  # user not exitst
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
-
-    if checkTokenTimeoutOrLogout(user):
-        data = {
-            'status': -4,
-            'reason': 'Please login!'
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+    cu_st, tmp = checkUser(request)
+    if not cu_st == 1:
+        return tmp
+    user = tmp
 
     course = Course.objects.filter(name=request.POST['name'])
     if course.exists():
-        data = {
-            'status': -5,
-            'reason': 'Course with same name exists!'
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+        return info(request, -5, 'Course with same name exists!')
 
     # do create
     data = {
@@ -86,12 +65,7 @@ def doCreate(request):
         )
         c.save()
     except Exception as e:
-        data = {
-            'status': -9,
-            'reason': 'Database error!'
-            #'debug': str(e)
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+        return info(request, -9, 'Database error!')
 
     # do add privilege
     try:
@@ -102,11 +76,7 @@ def doCreate(request):
         )
         cm.save()
     except:
-        data = {
-            'status': -10,
-            'reason': 'Database error!',
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+        return info(request, -10, 'Database error!')
 
     # success
     data = {
@@ -121,40 +91,24 @@ def coursePage(request, cname):
 
     st, user = checkUserLoginOrVisitor(request)
     # check user
-    if st == -2:
-        data = {
-            'status': -3,
-            'reason': 'Hacker?110!'  # user not exitst
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+    if st == -2:  # user not exitst
+        return info(request, -3, 'Hacker?110!')
 
     if checkTokenTimeoutOrLogout(user):
-        data = {
-            'status': -4,
-            'reason': 'Please login!'
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+        st = -1  # visistor
 
     # has pricilege (TODO: admin|normal)
     try:
         creator = User.objects.get(pk=course.ctrid)
     except:
-        data = {
-            'status': -5,
-            'reason': 'Database error!'
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+        return info(request, -9, 'Database error!')
 
     # Views++ -> popularity++
     course.popularity += 1  # TODO: limit user and ip
     try:
         course.save()
     except:
-        data = {
-            'status': -6,
-            'reason': 'Database error!'
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+        return info(request, -10, 'Database error!')
 
     data = {
         'course': course,
@@ -181,53 +135,27 @@ def coursePage(request, cname):
         return render(request, 'course/courseS.html', data)
 
 def doJoin(request, cname):
+    if request.method != 'POST':
+        raise PermissionDenied
+
     # checks
-    try:
-        request.POST['password']
-    except:
-        data = {
-            'status': -1,
-            'reason': 'Hacker? 110!'
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+    crd_st, rd = checkReqData(request, post=['password'])
+    if crd_st == -1:
+        return rd
 
-    st, user = checkUserLoginOrVisitor(request)
-    if st == -1:
-        data = {
-            'status': -2,
-            'reason': 'Please login!'
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
-    elif st == -2:
-        data = {
-            'status': -3,
-            'reason': 'Hacker?110!'  # user not exitst
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
-
-    if checkTokenTimeoutOrLogout(user):
-        data = {
-            'status': -4,
-            'reason': 'Please login!'
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+    cu_st, tmp = checkUser(request)
+    if not cu_st == 1:
+        return tmp
+    user = tmp
 
     course = get_object_or_404(Course, name=cname)
     cm = CourseMember.objects.filter(uid=user.pk, cid=course.pk)
     if cm.exists():
-        data = {
-            'status': -5,
-            'reason': 'Added. Please refresh!'
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+        return info(request, -5, 'Added. Please refresh!')
 
     # TODO: password length & char check
     if course.password != request.POST['password']:
-        data = {
-            'status': 2,
-            'reason': 'Wrong password'
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+        return info(request, 2, 'Wrong password')
 
     # do add privilege
     try:
@@ -238,16 +166,8 @@ def doJoin(request, cname):
         )
         cm.save()
     except:
-        data = {
-            'status': -9,
-            'reason': 'Database error!',
-        }
+        return info(request, -9, 'Database error!')
 
-
-    data = {
-        'status': 1,
-        'reason': 'success'
-    }
-    return render(request, 'info.html', {'info': json.dumps(data)})
+    return info(request, 1, 'success')
 
 

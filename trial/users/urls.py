@@ -9,5 +9,6 @@ urlpatterns = [
     path('doSignup', views.doSignup, name='doSignup'),
     path('login', views.login, name='login'),
     path('doLogin', views.doLogin, name='doLogin'),
+    path('getUC', views.getUC, name='getUC'),
     path('<str:ownerName>', views.profile, name='profile'),
 ]

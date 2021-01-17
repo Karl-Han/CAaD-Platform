@@ -2,14 +2,20 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
+from django.core.exceptions import PermissionDenied
 
 from users.models import User
+from courses.models import Course, CourseMember
 
 from Crypto.Hash import SHA3_512
 import json
 import os
 
-TTO = 7200  # token timeout (seconds)
+from utils.check import info, Visitor, checkTokenTimeoutOrLogout, checkReqData, checkUser
+
+class Visitor:
+    nickname = 'Visitor'
+    token = 'None'
 
 # Create your views here.
 def index(request):
@@ -20,27 +26,16 @@ def signup(request):
     return render(request, 'signup/signup.html', context)
 
 def doSignup(request):
+    if request.method != 'POST':
+        raise PermissionDenied
+
     # POST payload check
-    try:
-        request.POST['userName']
-        request.POST['password']
-        request.POST['password2']
-        request.POST['email']
-        request.POST['realName']
-        request.POST['uid']
-    except:
-        data = {
-            'status': -1,
-            'reason': 'Hacker? 110!'
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+    crd_st, rd = checkReqData(request, post=['userName', 'password', 'password2', 'email', 'realName', 'uid'])
+    if crd_st == -1:
+        return rd
 
     if request.POST['password'] != request.POST['password2']:
-        data = {
-            'status': -2,
-            'reason': 'Password not match!'
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+        return info(request, -2, 'Password not match!')
 
     data = {
         'nickname': request.POST['userName'],
@@ -59,19 +54,11 @@ def doSignup(request):
     # TODO: add sameName checker(check in time!)
     u = User.objects.filter(nickname=data['nickname']);
     if u.exists():
-        data = {
-            'status': -3,
-            'reason': 'User with same name existed!'
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+        return info(request, -3, 'User with same name existed!')
 
     u = User.objects.filter(email=data['email']);
     if u.exists():
-        data = {
-            'status': -4,
-            'reason': 'User with same email existed!'
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+        return info(request, -4, 'User with same email existed!')
 
     # TODO: more checks here (safer password & email format)
     # save to database
@@ -89,58 +76,32 @@ def doSignup(request):
             token = data['token']
         )
         u.save()
-        data = {
-            'status': 1,
-            'reason': 'success'
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+        return info(request, 1, 'success')
     except Exception as e:
-        data = {
-            'status': -9,
-            'reason': 'Database error!',
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+        return info(request, -9, 'Database error!')
 
-    # Something strang happened
-    data = {
-        'status': 0,
-        'reason': '???'
-    }
-    return render(request, 'info.html', {'info': json.dumps(data)})
     #return render(request, 'info.html', {'info': json.dumps(data, indent=4, sort_keys=True, default=str)})  # TODO: write database and remove str
-
 
 def login(request):
     context = {}
     return render(request, 'login/login.html', context)
 
 def doLogin(request):
+    if request.method != 'POST':
+        raise PermissionDenied
+
     # POST payload check
-    try:
-        request.POST['name']
-        request.POST['password']
-    except:
-        data = {
-            'status': -1,
-            'reason': 'Hacker? 110!'
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+    crd_st, rd = checkReqData(request, post=['name', 'password'])
+    if crd_st == -1:
+        return rd
 
     user = User.objects.filter(nickname=request.POST['name'])
-    if not user.exists():
-        data = {
-            'status': -2,
-            'reason': 'Wrong user name or password'  # user not exitst
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+    if not user.exists():  # user not exitst
+        return info(request, -2, 'Wrong user name or password' )
 
     user = user[0]  # should be unique
-    if not check_password(request.POST['password'], user.password):
-        data = {
-            'status': -3,
-            'reason': 'Wrong user name or password'  # password not match
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+    if not check_password(request.POST['password'], user.password): # password not match
+        return info(request, -2, 'Wrong user name or password' )
 
     # get token (random)
     hObj = SHA3_512.new()
@@ -151,11 +112,7 @@ def doLogin(request):
         user.last_login = timezone.now()
         user.save()
     except:
-        data = {
-            'status': -9,
-            'reason': 'Database error!',
-        }
-        return render(request, 'info.html', {'info': json.dumps(data)})
+        return info(request, -9, 'Database error!')
 
     # success
     data = {
@@ -166,44 +123,6 @@ def doLogin(request):
         }
     }
     return render(request, 'info.html', {'info': json.dumps(data)})
-
-    # Something strang happened
-    data = {
-        'status': 0,
-        'reason': '???'
-    }
-    return render(request, 'info.html', {'info': json.dumps(data)})
-
-def isTokenTimeout(user):
-    return (timezone.now()-user.last_login).seconds > TTO
-
-class Visitor:
-    nickname = 'Visitor'
-    token = 'None'
-
-def checkTokenTimeoutOrLogout(user):
-    if len(user.token) != 128:
-        return False
-    result = isTokenTimeout(user)
-    if result:
-        # do logout
-        hObj = SHA3_512.new()
-        hObj.update(bytes(user.nickname, 'utf8')+os.urandom(32))
-        token = hObj.hexdigest()
-        user.token = token[:-2]  # len->126, reduce database operations
-        user.save()  # except?
-    return result
-
-def checkUserLoginOrVisitor(request):
-    if (not 'utk' in request.COOKIES) or len(request.COOKIES['utk'])!=128:
-        return -1, Visitor()
-
-    user = User.objects.filter(token=request.COOKIES['utk'])
-    if not user.exists():
-        return -2, Visitor()
-
-    user = user[0]
-    return 1, user
 
 def profile(request, ownerName):
     # TODO: render self or other (template)
@@ -231,15 +150,45 @@ def profile(request, ownerName):
                 }
                 return render(request, 'profile/self.html', data)
         except:
-            data = {
-                'status': -9,
-                'reason': 'Something wrong, please contact developer',
-            }
-            return render(request, 'info.html', {'info': json.dumps(data)})
+            return info(request, -9, 'Something wrong, please contact developer')
     else:
         data = {
             'user': user,
             'owner': owner
         }
         return render(request, 'profile/other.html', data)
+
+def getUC(request):  # get courses joined in 
+    if request.method != 'POST':
+        raise PermissionDenied
+        #return HttpResponse('POST method only!', status=403)
+
+    # checks
+    crd_st, rd = checkReqData(request, cookies=['utk'])
+    if crd_st == -1:
+        return rd
+
+    cu_st, tmp = checkUser(request)
+    if not cu_st == 1:
+        return tmp
+    user = tmp
+
+    cmem = CourseMember.objects.filter(uid=user.pk)
+    uc = []
+    for cm in cmem:
+        try:
+            course = Course.objects.get(pk=cm.cid)
+            uc.append({
+                'cname': course.name,
+                'cpopularity': course.popularity,
+                'uprivilege': cm.types
+            })
+        except:
+            return info(request, -9, 'Database error!')
+
+    data = {
+        'status': 1,
+        'data': uc
+    }
+    return render(request, 'info.html', {'info': json.dumps(data)})
 

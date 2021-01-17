@@ -20,6 +20,7 @@ python manage.py runserver
 - signup && login && naive profile
 - create course && naive course page
 - course list(index) && join course
+- my courses in user profile (API: getUC)
 
 ## TODO
 - CSS for app:users
@@ -30,7 +31,7 @@ python manage.py runserver
 - (more TODOs in code files)
 
 ## Optimization
-- Put codes for checking users(privilege) in a function(reuse)
+- moved self apis to utils
 
 ## Index
 - /users/signup: signup page
@@ -45,3 +46,5 @@ python manage.py runserver
 ### signed up users (for testing)
 - 123:123
 - 121:121
+- 111:111
+
