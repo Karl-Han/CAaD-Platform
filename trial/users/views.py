@@ -12,6 +12,7 @@ import json
 import os
 
 from utils.check import info, Visitor, checkTokenTimeoutOrLogout, checkReqData, checkUser
+from utils.status import *
 
 class Visitor:
     nickname = 'Visitor'
@@ -35,7 +36,7 @@ def doSignup(request):
         return rd
 
     if request.POST['password'] != request.POST['password2']:
-        return info(request, -2, 'Password not match!')
+        return info(request, INFO_NOT_MATCH, 'Password '+INFO_STR[INFO_NOT_MATCH])
 
     data = {
         'nickname': request.POST['userName'],
@@ -54,11 +55,11 @@ def doSignup(request):
     # TODO: add sameName checker(check in time!)
     u = User.objects.filter(nickname=data['nickname']);
     if u.exists():
-        return info(request, -3, 'User with same name existed!')
+        return info(request, INFO_SAME_NAME, 'User '+INFO_STR[INFO_SAME_NAME])
 
     u = User.objects.filter(email=data['email']);
     if u.exists():
-        return info(request, -4, 'User with same email existed!')
+        return info(request, INFO_SAME_NAME, 'User '+INFO_STR[INFO_SAME_NAME])
 
     # TODO: more checks here (safer password & email format)
     # save to database
@@ -76,9 +77,9 @@ def doSignup(request):
             token = data['token']
         )
         u.save()
-        return info(request, 1, 'success')
-    except Exception as e:
-        return info(request, -9, 'Database error!')
+        return info(request, SUCCESS, INFO_STR[SUCCESS])
+    except:
+        return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
 
     #return render(request, 'info.html', {'info': json.dumps(data, indent=4, sort_keys=True, default=str)})  # TODO: write database and remove str
 
@@ -97,11 +98,11 @@ def doLogin(request):
 
     user = User.objects.filter(nickname=request.POST['name'])
     if not user.exists():  # user not exitst
-        return info(request, -2, 'Wrong user name or password' )
+        return info(request, WA_PWD2, INFO_STR[WA_PWD2] )
 
     user = user[0]  # should be unique
     if not check_password(request.POST['password'], user.password): # password not match
-        return info(request, -2, 'Wrong user name or password' )
+        return info(request, WA_PWD2, INFO_STR[WA_PWD2] )
 
     # get token (random)
     hObj = SHA3_512.new()
@@ -112,7 +113,7 @@ def doLogin(request):
         user.last_login = timezone.now()
         user.save()
     except:
-        return info(request, -9, 'Database error!')
+        return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
 
     # success
     data = {
@@ -123,6 +124,18 @@ def doLogin(request):
         }
     }
     return render(request, 'info.html', {'info': json.dumps(data)})
+
+def getUC(user):  # get courses joined in 
+    cmem = CourseMember.objects.filter(uid=user.pk)
+    uc = []
+    for cm in cmem:
+        course = Course.objects.get(pk=cm.cid)
+        uc.append({
+            'cname': course.name,
+            'cpopularity': course.popularity,
+            'uprivilege': cm.types
+        })
+    return uc
 
 def profile(request, ownerName):
     # TODO: render self or other (template)
@@ -145,12 +158,17 @@ def profile(request, ownerName):
                 }
                 return render(request, 'profile/other.html', data)
             else:
+                try:
+                    uc = getUC(user)
+                except:
+                    return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
                 data = {
-                    'user': user
+                    'user': user,
+                    'uc': uc
                 }
                 return render(request, 'profile/self.html', data)
         except:
-            return info(request, -9, 'Something wrong, please contact developer')
+            return info(request, INFO_UNKNOW, INFO_STR[INFO_UNKNOW])
     else:
         data = {
             'user': user,
@@ -158,6 +176,7 @@ def profile(request, ownerName):
         }
         return render(request, 'profile/other.html', data)
 
+'''
 def getUC(request):  # get courses joined in 
     if request.method != 'POST':
         raise PermissionDenied
@@ -184,11 +203,11 @@ def getUC(request):  # get courses joined in
                 'uprivilege': cm.types
             })
         except:
-            return info(request, -9, 'Database error!')
+            return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
 
     data = {
         'status': 1,
         'data': uc
     }
     return render(request, 'info.html', {'info': json.dumps(data)})
-
+'''

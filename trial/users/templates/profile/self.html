@@ -7,52 +7,12 @@
     <h5>Hello {{ user.nickname }}</h5>
 
     <div id="myCourses">
-      <form id="form" hidden="true">
-        {% csrf_token %}
-      </form>
       <h5>My Courses:</h5>
+      <ul>
+        {% for c in uc %}
+        <li><a href="/courses/{{ c.cname }}">{{ c.cname }}: {{ c.cpopularity }} ({{ c.uprivilege }})</a></li>
+        {% endfor %}
+      </ul>
     </div>
-
-    <script type="text/javascript">
-      window.addEventListener("load", function () {
-        function sendData() {
-          var url = "getUC";
-          var XHR = new XMLHttpRequest();
-          var form = document.getElementById("form");
-          var FD  = new FormData(form);
-          XHR.onreadystatechange = function() {
-            if (XHR.readyState==4 && XHR.status==200) {
-              result = XHR.responseText.replaceAll("&quot;", "\"");
-              result = JSON.parse(result);
-              if (result["status"]) {
-                if (result["status"] == 1) {
-                  var mcs = document.getElementById("myCourses");
-                  data = result['data']
-                  for (var i in data) {
-                    d = data[i]
-                    var a = document.createElement("a");
-                    a.innerHTML = d["cname"]+": "+d["cpopularity"]+" ("+d["uprivilege"]+")";
-                    a.setAttribute("href", "/courses/"+d["cname"]);
-
-                    var p = document.createElement("p");
-                    p.appendChild(a);
-
-                    mcs.appendChild(p);
-                  }
-                } else {
-                  alert("[Debug] "+result["reason"])  // TODO
-                }
-              } else {
-                alert("[Debug] POST error");  // TODO
-              }
-            }
-          }
-          XHR.open("POST", url);
-          XHR.send(FD);
-        }
-
-        sendData();
-      });
-    </script>
   </body>
 </html>

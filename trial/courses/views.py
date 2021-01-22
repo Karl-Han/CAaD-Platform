@@ -10,6 +10,7 @@ import json
 import random
 
 from utils.check import info, Visitor, checkTokenTimeoutOrLogout, checkUserLoginOrVisitor, checkReqData, checkUser
+from utils.status import *
 
 # Create your views here.
 def index(request):
@@ -38,7 +39,7 @@ def doCreate(request):
 
     course = Course.objects.filter(name=request.POST['name'])
     if course.exists():
-        return info(request, -5, 'Course with same name exists!')
+        return info(request, INFO_SAME_NAME, 'Course'+INFO_STR[INFO_SAME_NAME])
 
     # do create
     data = {
@@ -65,7 +66,7 @@ def doCreate(request):
         )
         c.save()
     except Exception as e:
-        return info(request, -9, 'Database error!')
+        return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
 
     # do add privilege
     try:
@@ -76,7 +77,7 @@ def doCreate(request):
         )
         cm.save()
     except:
-        return info(request, -10, 'Database error!')
+        return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
 
     # success
     data = {
@@ -86,13 +87,25 @@ def doCreate(request):
     }
     return render(request, 'info.html', {'info': json.dumps(data)})
 
+def getCM(cid):
+    cmem = CourseMember.objects.filter(cid=cid)
+    cm = []
+    for c in cmem:
+        uid = c.uid
+        user = User.objects.get(pk=uid)
+        cm.append({
+            'uname': user.nickname,
+            'uprivilege': c.types
+        })
+    return cm
+
 def coursePage(request, cname):
     course = get_object_or_404(Course, name=cname)
 
     st, user = checkUserLoginOrVisitor(request)
     # check user
     if st == -2:  # user not exitst
-        return info(request, -3, 'Hacker?110!')
+        return info(request, INFO_HACKER, INFO_STR[INFO_HACKER])
 
     if checkTokenTimeoutOrLogout(user):
         st = -1  # visistor
@@ -101,18 +114,24 @@ def coursePage(request, cname):
     try:
         creator = User.objects.get(pk=course.ctrid)
     except:
-        return info(request, -9, 'Database error!')
+        return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
 
     # Views++ -> popularity++
     course.popularity += 1  # TODO: limit user and ip
     try:
         course.save()
     except:
-        return info(request, -10, 'Database error!')
+        return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
+
+    try:
+        cm = getCM(course.pk)
+    except:
+        return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
 
     data = {
         'course': course,
-        'creator': creator
+        'creator': creator,
+        'cm': cm
     }
 
     # check privilege
@@ -151,11 +170,11 @@ def doJoin(request, cname):
     course = get_object_or_404(Course, name=cname)
     cm = CourseMember.objects.filter(uid=user.pk, cid=course.pk)
     if cm.exists():
-        return info(request, -5, 'Added. Please refresh!')
+        return info(request, INFO_REFRESH, 'Added. '+INFO_STR[INFO_REFRESH])
 
     # TODO: password length & char check
     if course.password != request.POST['password']:
-        return info(request, 2, 'Wrong password')
+        return info(request, WA_PWD, INFO_STR[WA_PWD])
 
     # do add privilege
     try:
@@ -166,8 +185,8 @@ def doJoin(request, cname):
         )
         cm.save()
     except:
-        return info(request, -9, 'Database error!')
+        return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
 
-    return info(request, 1, 'success')
+    return info(request, SUCCESS, INFO_STR[SUCCESS])
 
 

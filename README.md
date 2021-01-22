@@ -20,14 +20,14 @@ python manage.py runserver
 - signup && login && naive profile
 - create course && naive course page
 - course list(index) && join course
-- my courses in user profile (API: getUC)
+- my courses in user profile (getUC)
+- member list in course page (getCM)
 
 ## TODO
 - CSS for app:users
 - more details in profile
 - tests
 - limit string length in frontend form
-- member list in course page (API: getCM)
 - (more TODOs in code files)
 
 ## Optimization

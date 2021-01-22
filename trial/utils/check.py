@@ -7,6 +7,8 @@ from Crypto.Hash import SHA3_512
 import json
 import os
 
+from utils.status import *
+
 class Visitor:
     nickname = 'Visitor'
     token = 'None'
@@ -63,16 +65,16 @@ def checkReqData(request, post=[], cookies=[]):
             request.COOKIES[c]
         return 1, None
     except:
-        return -1, info(request, -1, 'Hacker? 110!')
+        return -1, info(request, INFO_HACKER, INFO_STR[INFO_HACKER])
 
 def checkUser(request):
     culv_st, user = checkUserLoginOrVisitor(request)
     if culv_st == -1:
-        return -2, info(request, -2, 'Please login!')
+        return -2, info(request, INFO_LOGIN, INFO_STR[INFO_LOGIN])
     elif culv_st == -2:  # user not exitst
-        return -3, info(request, -3, 'Hacker?110!')
+        return -3, info(request, INFO_HACKER, INFO_STR[INFO_HACKER])
 
     if checkTokenTimeoutOrLogout(user):
-        return -4, info(request, -4, 'Please login!')
+        return -4, info(request, INFO_LOGIN, INFO_STR[INFO_LOGIN])
     return 1, user
 
