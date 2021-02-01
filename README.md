@@ -16,7 +16,7 @@ python manage.py runserver
 #python manage.py shell
 ```
 
-## Finished
+## DONE
 - signup && login && naive profile
 - create course && naive course page
 - course list(index) && join course
@@ -25,13 +25,20 @@ python manage.py runserver
 
 ## TODO
 - CSS for app:users
+- top bar (user info)
 - more details in profile
 - tests
 - limit string length in frontend form
+- activate a course (for admin); start a course (for creator)
+- delete user and change user's privilege
+- add/delete/change homework (homework model?)
+- change course's password(random)
+- Docker API (@imp)
 - (more TODOs in code files)
 
 ## Optimization
-- moved self apis to utils
+- move self apis to utils (Done)
+- get 10 elems in getUC/getCM(change to API) (TODO)
 
 ## Index
 - /users/signup: signup page
