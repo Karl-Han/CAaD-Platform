@@ -23,6 +23,9 @@ def index(request):
 def createCourse(request):
     return render(request, 'create/create.html', {})
 
+def getRandCPwd(dic='1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ', length=8):
+    return ''.join(random.sample(dic, length))
+
 def doCreate(request):
     if request.method != 'POST':
         raise PermissionDenied
@@ -44,7 +47,7 @@ def doCreate(request):
     # do create
     data = {
         'name': request.POST['name'],
-        'password': ''.join(random.sample('1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ', 8)),
+        'password': getRandCPwd(),
         'ctrid': user.id,
         'description': request.POST['description'],
         'status': 0,
@@ -189,4 +192,32 @@ def doJoin(request, cname):
 
     return info(request, SUCCESS, INFO_STR[SUCCESS])
 
+def doChangePwd(request, cname):
+    if request.method != 'POST':
+        raise PermissionDenied
 
+    cu_st, tmp = checkUser(request)
+    if not cu_st == 1:
+        return tmp
+    user = tmp
+
+    c = get_object_or_404(Course, name=cname)
+    cm = get_object_or_404(CourseMember, uid=user.pk, cid=c.pk)
+    hasPriv = [0, 1]
+    if not cm.types in hasPriv:
+        raise PermissionDenied
+
+    pwd = getRandCPwd()
+    try:
+        c.password = pwd
+        c.save()
+    except:
+        return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
+
+    # success
+    data = {
+        'status': 1,
+        'reason': 'success',
+        'pwd2': pwd
+    }
+    return render(request, 'info.html', {'info': json.dumps(data)})

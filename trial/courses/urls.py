@@ -9,4 +9,5 @@ urlpatterns = [
     path('doCreate', views.doCreate, name='doCreate'),
     path('<str:cname>', views.coursePage, name='coursePage'),
     path('<str:cname>/join', views.doJoin, name='doJoin'),
+    path('<str:cname>/newpwd', views.doChangePwd, name='doChangePwd'),
 ]

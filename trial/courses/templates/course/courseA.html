@@ -1,17 +1,67 @@
-<h2>Admin mode</h2>
-<h5>课程名:{{ course.name }}</h5>
-<h5>创建人:{{ creator.nickname }}</h5>
-<h5>加课密码:{{ course.password }}</h5>
-<h5>人气:{{ course.popularity }}</h5>
-<h5>课程描述:{{ course.description }}</h5>
-<h5>status:{{ course.status }}</h5>
-<h5>TODO</h5>
+<html>
+  <head>
+    <title>A</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static "public/css/main.css" %}">
+  </head>
+  <body>
+    <h2>Admin mode</h2>
+    <h5>课程名:{{ course.name }}</h5>
+    <h5>创建人:{{ creator.nickname }}</h5>
+    <h5>人气:{{ course.popularity }}</h5>
+    <h5>课程描述:{{ course.description }}</h5>
+    <h5>status:{{ course.status }}</h5>
+    <h5>加课密码:<p id="pwd">{{ course.password }}</p></h5>
 
-<div id="Members">
-  <h5>Members:</h5>
-  <ul>
-    {% for m in cm %}
-    <li><a href="/users/{{ m.uname }}">{{ m.uname }}: ({{ m.uprivilege }})</a></li>
-    {% endfor %}
-  </ul>
-</div>
+    <form id="chgPwd" action="{{ course.name }}/newpwd" method="POST">
+      {% csrf_token %}
+      <input type="submit" value="submit">
+    </form>
+
+    <div id="Members">
+      <h5>Members:</h5>
+      <ul>
+        {% for m in cm %}
+        <li><a href="/users/{{ m.uname }}">{{ m.uname }}: ({{ m.uprivilege }})</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <script type="text/javascript">
+      window.addEventListener("load", function () {
+        function sendData() {
+          var url = form.action;
+          var XHR = new XMLHttpRequest();
+          var FD  = new FormData(form);
+          XHR.onreadystatechange = function() {
+            if (XHR.readyState==4 && XHR.status==200) {
+              result = XHR.responseText.replaceAll("&quot;", "\"");
+              console.log(result);
+              result = JSON.parse(result);
+              if (result["status"]) {
+                if (result["status"] == 1) {
+                  confirm("修改成功");
+                  document.getElementById("pwd").innerText = result["pwd2"];
+                } else {
+                  alert("[Debug] "+result["reason"])  // TODO
+                }
+              } else {
+                alert("[Debug] POST error");  // TODO
+              }
+            }
+          }
+          XHR.open("POST", url);
+          XHR.send(FD);
+        }
+
+        var form = document.getElementById("chgPwd");
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+          sendData();
+        });
+      });
+    </script>
+  </body>
+</html>
+
+
