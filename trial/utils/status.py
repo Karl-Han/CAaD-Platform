@@ -1,6 +1,7 @@
 SUCCESS = 1
-WA_PWD = 2
-WA_PWD2 = 3
+FAIL = 2
+WA_PWD = 3
+WA_PWD2 = 4
 
 # info
 INFO_HACKER = -1
@@ -22,6 +23,7 @@ INFO_STR = {
     INFO_DB_ERR: 'Database error!',
     INFO_UNKNOW: 'Something wrong!',
     SUCCESS: 'Success!',
+    FAIL: 'Fail!',
     WA_PWD: 'Wrong password!',
     WA_PWD2: 'Wrong name or password!'
 }

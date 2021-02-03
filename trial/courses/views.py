@@ -69,7 +69,7 @@ def doCreate(request):
         )
         c.save()
     except Exception as e:
-        return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
+        return info(request, INFO_DB_ERR)
 
     # do add privilege
     try:
@@ -80,7 +80,7 @@ def doCreate(request):
         )
         cm.save()
     except:
-        return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
+        return info(request, INFO_DB_ERR)
 
     # success
     data = {
@@ -108,7 +108,7 @@ def coursePage(request, cname):
     st, user = checkUserLoginOrVisitor(request)
     # check user
     if st == -2:  # user not exitst
-        return info(request, INFO_HACKER, INFO_STR[INFO_HACKER])
+        return info(request, INFO_HACKER)
 
     if checkTokenTimeoutOrLogout(user):
         st = -1  # visistor
@@ -117,19 +117,19 @@ def coursePage(request, cname):
     try:
         creator = User.objects.get(pk=course.ctrid)
     except:
-        return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
+        return info(request, INFO_DB_ERR)
 
     # Views++ -> popularity++
     course.popularity += 1  # TODO: limit user and ip
     try:
         course.save()
     except:
-        return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
+        return info(request, INFO_DB_ERR)
 
     try:
         cm = getCM(course.pk)
     except:
-        return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
+        return info(request, INFO_DB_ERR)
 
     data = {
         'course': course,
@@ -177,7 +177,7 @@ def doJoin(request, cname):
 
     # TODO: password length & char check
     if course.password != request.POST['password']:
-        return info(request, WA_PWD, INFO_STR[WA_PWD])
+        return info(request, WA_PWD)
 
     # do add privilege
     try:
@@ -188,9 +188,9 @@ def doJoin(request, cname):
         )
         cm.save()
     except:
-        return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
+        return info(request, INFO_DB_ERR)
 
-    return info(request, SUCCESS, INFO_STR[SUCCESS])
+    return info(request, SUCCESS)
 
 def doChangePwd(request, cname):
     if request.method != 'POST':
@@ -212,7 +212,7 @@ def doChangePwd(request, cname):
         c.password = pwd
         c.save()
     except:
-        return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
+        return info(request, INFO_DB_ERR)
 
     # success
     data = {
@@ -221,3 +221,38 @@ def doChangePwd(request, cname):
         'pwd2': pwd
     }
     return render(request, 'info.html', {'info': json.dumps(data)})
+
+def doDelUser(request, cname, uname):
+    if request.method != 'POST':
+        raise PermissionDenied
+    c = get_object_or_404(Course, name=cname)
+
+    # check privilege
+    cu_st, tmp = checkUser(request)
+    if not cu_st == 1:
+        return tmp
+    user = tmp
+    try:
+        cm = CourseMember.objects.get(cid=c.pk, uid=user.pk)
+    except:
+        return info(request, INFO_DB_ERR)
+    if cm.types >= 3:
+        raise PermissionDenied
+
+    # get cn
+    du = get_object_or_404(User, nickname=uname)
+    try:
+        dcm = CourseMember.objects.get(cid=c.pk, uid=du.pk)
+    except:
+        return info(request, INFO_DB_ERR)
+
+    if cm.types >= dcm.types:  # TODO: delete itself
+        raise PermissionDenied
+
+    # do delete
+    try:
+        dcm.delete()
+    except:
+        return info(request, INFO_DB_ERR)
+
+    return info(request, SUCCESS)

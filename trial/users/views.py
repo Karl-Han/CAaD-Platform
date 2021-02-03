@@ -20,7 +20,7 @@ class Visitor:
 
 # Create your views here.
 def index(request):
-    return HttpResponse("Hello, world.")
+    return HttpResponse("Hello, world. <a href=\"/users/login\">login</a>")
 
 def signup(request):
     context = {}
@@ -77,9 +77,9 @@ def doSignup(request):
             token = data['token']
         )
         u.save()
-        return info(request, SUCCESS, INFO_STR[SUCCESS])
+        return info(request, SUCCESS)
     except:
-        return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
+        return info(request, INFO_DB_ERR)
 
     #return render(request, 'info.html', {'info': json.dumps(data, indent=4, sort_keys=True, default=str)})  # TODO: write database and remove str
 
@@ -98,11 +98,11 @@ def doLogin(request):
 
     user = User.objects.filter(nickname=request.POST['name'])
     if not user.exists():  # user not exitst
-        return info(request, WA_PWD2, INFO_STR[WA_PWD2] )
+        return info(request, WA_PWD2)
 
     user = user[0]  # should be unique
     if not check_password(request.POST['password'], user.password): # password not match
-        return info(request, WA_PWD2, INFO_STR[WA_PWD2] )
+        return info(request, WA_PWD2)
 
     # get token (random)
     hObj = SHA3_512.new()
@@ -113,7 +113,7 @@ def doLogin(request):
         user.last_login = timezone.now()
         user.save()
     except:
-        return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
+        return info(request, INFO_DB_ERR)
 
     # success
     data = {
@@ -161,14 +161,14 @@ def profile(request, ownerName):
                 try:
                     uc = getUC(user)
                 except:
-                    return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
+                    return info(request, INFO_DB_ERR)
                 data = {
                     'user': user,
                     'uc': uc
                 }
                 return render(request, 'profile/self.html', data)
         except:
-            return info(request, INFO_UNKNOW, INFO_STR[INFO_UNKNOW])
+            return info(request, INFO_UNKNOW)
     else:
         data = {
             'user': user,
@@ -203,7 +203,7 @@ def getUC(request):  # get courses joined in
                 'uprivilege': cm.types
             })
         except:
-            return info(request, INFO_DB_ERR, INFO_STR[INFO_DB_ERR])
+            return info(request, INFO_DB_ERR)
 
     data = {
         'status': 1,

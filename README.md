@@ -22,18 +22,11 @@ python manage.py runserver
 - course list(index) && join course
 - my courses in user profile (getUC)
 - member list in course page (getCM)
+- update password in a course
+- delete user in a course
 
 ## TODO
-- CSS for app:users
-- top bar (user info)
-- more details in profile
-- tests
-- limit string length in frontend form
-- activate a course (for admin); start a course (for creator)
-- delete user and change user's privilege
-- add/delete/change homework (homework model?)
-- change course's password(random)
-- Docker API (@imp)
+- See projects in github
 - (more TODOs in code files)
 
 ## Optimization

@@ -15,7 +15,13 @@ class Visitor:
 
 TTO = 7200  # token timeout (seconds)
 
-def info(request, st, reason, debug=None):
+def info(request, st, reason=None, debug=None):
+    if reason == None:
+        try:
+            reason = INFO_STR[st]
+        except:
+            reason = 'Inner Error! St not found!'
+
     if debug == None:
         data = {
             'status': st,

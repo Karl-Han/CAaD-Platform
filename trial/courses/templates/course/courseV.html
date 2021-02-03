@@ -11,16 +11,15 @@
     <h5>人气:{{ course.popularity }}</h5>
     <h5>课程描述:{{ course.description }}</h5>
     <h5>status:{{ course.status }}</h5>
-    <h5>TODO</h5>
     <form id="doJoin" action="{% url "courses:doJoin" cname=course.name %}" method="POST">
       {% csrf_token %}
       加课密码: <input name="password" type="password" id="pwd"></input><p class="necessary">*</p></br>
-      <input type="submit" value="submit">
+      <input type="submit" value="加入">
     </form>
 
     <script type="text/javascript">
       window.addEventListener("load", function () {
-        function sendData() {
+        function sendDataJoin(form) {
           const necessary = {
             "pwd": "加课密码",
           }
@@ -38,31 +37,27 @@
           XHR.onreadystatechange = function() {
             if (XHR.readyState==4 && XHR.status==200) {
               result = XHR.responseText.replaceAll("&quot;", "\"");
-              console.log(result)
-              /*
               result = JSON.parse(result);
               if (result["status"]) {
                 if (result["status"] == 1) {
-                  //confirm("登陆成功");
-                  document.cookie = "utk="+result['data']['token']+"; path=/";
-                  window.location.href = result['data']['href'];
+                  confirm("加入成功");
+                  location.reload();
                 } else {
                   alert("[Debug] "+result["reason"])  // TODO
                 }
               } else {
                 alert("[Debug] POST error");  // TODO
               }
-              */
             }
           }
           XHR.open("POST", url);
           XHR.send(FD);
         }
 
-        var form = document.getElementById("doJoin");
-        form.addEventListener("submit", function (event) {
+        var doJoin = document.getElementById("doJoin");
+        doJoin.addEventListener("submit", function (event) {
           event.preventDefault();
-          sendData();
+          sendDataJoin(doJoin);
         });
       });
     </script>

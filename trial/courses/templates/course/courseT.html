@@ -15,28 +15,33 @@
 
     <form id="chgPwd" action="{{ course.name }}/newpwd" method="POST">
       {% csrf_token %}
-      <input type="submit" value="submit">
+      <input type="submit" value="更新密码">
     </form>
 
     <div id="Members">
       <h5>Members:</h5>
       <ul>
         {% for m in cm %}
-        <li><a href="/users/{{ m.uname }}">{{ m.uname }}: ({{ m.uprivilege }})</a></li>
+        <li>
+          <a href="/users/{{ m.uname }}">{{ m.uname }}: ({{ m.uprivilege }})</a>
+          <form action="{{ course.name }}/{{ m.uname }}/del" method="post">
+            {% csrf_token %}
+            <input type="submit" value="删除用户">
+          </form>
+        </li>
         {% endfor %}
       </ul>
     </div>
 
     <script type="text/javascript">
       window.addEventListener("load", function () {
-        function sendData() {
+        function sendDataChgPwd(form) {
           var url = form.action;
           var XHR = new XMLHttpRequest();
           var FD  = new FormData(form);
           XHR.onreadystatechange = function() {
             if (XHR.readyState==4 && XHR.status==200) {
               result = XHR.responseText.replaceAll("&quot;", "\"");
-              console.log(result);
               result = JSON.parse(result);
               if (result["status"]) {
                 if (result["status"] == 1) {
@@ -54,11 +59,45 @@
           XHR.send(FD);
         }
 
-        var form = document.getElementById("chgPwd");
-        form.addEventListener("submit", function (event) {
+        function sendDataDelUser(form) {
+          var url = form.action;
+          var XHR = new XMLHttpRequest();
+          var FD  = new FormData(form);
+          XHR.onreadystatechange = function() {
+            if (XHR.readyState==4 && XHR.status==200) {
+              result = XHR.responseText.replaceAll("&quot;", "\"");
+              result = JSON.parse(result);
+              if (result["status"]) {
+                if (result["status"] == 1) {
+                  confirm("删除成功");
+                  location.reload();
+                } else {
+                  alert("[Debug] "+result["reason"])  // TODO
+                }
+              } else {
+                alert("[Debug] POST error");  // TODO
+              }
+            }
+          }
+          XHR.open("POST", url);
+          XHR.send(FD);
+        }
+
+        var chgPwd = document.getElementById("chgPwd");
+        chgPwd.addEventListener("submit", function (event) {
           event.preventDefault();
-          sendData();
+          sendDataChgPwd(chgPwd);
         });
+
+        memLis = document.getElementById("Members").getElementsByTagName("ul")[0].getElementsByTagName("li");
+        for (var i=0;i<memLis.length;i++) {
+          form = memLis[i].getElementsByTagName("form")[0];
+          form.addEventListener("submit", function (event) {
+            event.preventDefault();
+            sendDataDelUser(form);
+          });
+        }
+
       });
     </script>
   </body>
