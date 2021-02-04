@@ -11,4 +11,5 @@ urlpatterns = [
     path('<str:cname>/join', views.doJoin, name='doJoin'),
     path('<str:cname>/newpwd', views.doChangePwd, name='doChangePwd'),
     path('<str:cname>/<str:uname>/del', views.doDelUser, name='doDelUser'),
+    path('<str:cname>/<str:uname>/spriv', views.doChgUserPriv, name='doChgUserPriv'),
 ]

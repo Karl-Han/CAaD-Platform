@@ -19,7 +19,7 @@
 
     <script type="text/javascript">
       window.addEventListener("load", function () {
-        function sendDataJoin(form) {
+        function sendDataJoin() {
           const necessary = {
             "pwd": "加课密码",
           }
@@ -31,6 +31,7 @@
             }
           }
 
+          form = event.target;
           var url = form.action;
           var XHR = new XMLHttpRequest();
           var FD  = new FormData(form);
@@ -54,10 +55,10 @@
           XHR.send(FD);
         }
 
-        var doJoin = document.getElementById("doJoin");
-        doJoin.addEventListener("submit", function (event) {
+        var form = document.getElementById("doJoin");
+        form.addEventListener("submit", function (event) {
           event.preventDefault();
-          sendDataJoin(doJoin);
+          sendDataJoin();
         });
       });
     </script>

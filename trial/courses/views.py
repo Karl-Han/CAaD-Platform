@@ -239,7 +239,7 @@ def doDelUser(request, cname, uname):
     if cm.types >= 3:
         raise PermissionDenied
 
-    # get cn
+    # get cm
     du = get_object_or_404(User, nickname=uname)
     try:
         dcm = CourseMember.objects.get(cid=c.pk, uid=du.pk)
@@ -252,6 +252,57 @@ def doDelUser(request, cname, uname):
     # do delete
     try:
         dcm.delete()
+    except:
+        return info(request, INFO_DB_ERR)
+
+    return info(request, SUCCESS)
+
+def doChgUserPriv(request, cname, uname):
+    if request.method != 'POST':
+        raise PermissionDenied
+    # checks
+    crd_st, rd = checkReqData(request, post=['priv2'])
+    if crd_st == -1:
+        return rd
+    mp = {'adm':0, 'tea':1, 'asi':2, 'stu':3}
+    try:
+        priv2 = mp[request.POST['priv2']]
+    except:
+        return info(request, INFO_HACKER)
+
+    c = get_object_or_404(Course, name=cname)
+
+    # check privilege
+    cu_st, tmp = checkUser(request)
+    if not cu_st == 1:
+        return tmp
+    user = tmp
+    try:
+        cm = CourseMember.objects.get(cid=c.pk, uid=user.pk)
+    except:
+        return info(request, INFO_DB_ERR)
+    if cm.types >= 3:
+        raise PermissionDenied
+
+    # get cm and check
+    cu = get_object_or_404(User, nickname=uname)
+    if user.pk == cu.pk:
+        return info(request, INFO_CANTB_YS, 'User'+INFO_STR[INFO_CANTB_YS])
+    try:
+        ccm = CourseMember.objects.get(cid=c.pk, uid=cu.pk)
+    except:
+        return info(request, INFO_DB_ERR)
+    if cm.types >= ccm.types:
+        raise PermissionDenied
+    if ccm.types == priv2:
+        return info(request, INFO_CANTB_SAME, 'Privilege'+INFO_STR[INFO_CANTB_SAME])
+    if cm.types >= priv2:
+        raise PermissionDenied
+
+    # change
+    try:
+        ccm.types = priv2
+        ccm.save()
     except:
         return info(request, INFO_DB_ERR)
 

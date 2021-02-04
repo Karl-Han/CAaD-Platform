@@ -10,6 +10,8 @@ INFO_TIMEOUT = -3
 INFO_SAME_NAME = -4
 INFO_REFRESH = -5
 INFO_NOT_MATCH = -6
+INFO_CANTB_SAME = -7
+INFO_CANTB_YS = -8
 INFO_DB_ERR = -9
 INFO_UNKNOW = -10
 
@@ -20,6 +22,8 @@ INFO_STR = {
     INFO_SAME_NAME: ' with same name exists!',  # add front
     INFO_REFRESH: 'Please refresh!',
     INFO_NOT_MATCH: ' not match',  # add
+    INFO_CANTB_SAME: ' can not be same!',  # add,
+    INFO_CANTB_YS: ' can not be yourself',  # add,
     INFO_DB_ERR: 'Database error!',
     INFO_UNKNOW: 'Something wrong!',
     SUCCESS: 'Success!',

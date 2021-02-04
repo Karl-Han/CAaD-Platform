@@ -20,5 +20,5 @@ class Course(models.Model):
 class CourseMember(models.Model):
     cid = models.IntegerField('course id')
     uid = models.IntegerField('member user id')
-    #type = ( (0, 'admin'), (1, 'teacher'), (2, 'asistant'), (3, 'student'), (4, visistor) )
+    #type = ( (0, 'admin'), (1, 'teacher'), (2, 'asistant'), (3, 'student') )
     types = models.IntegerField('user type (privilege)')
