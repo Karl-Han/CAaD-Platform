@@ -5,6 +5,7 @@ from django.core.exceptions import PermissionDenied
 
 from users.models import User
 from courses.models import Course, CourseMember
+from homeworks.models import Homework, HomeworkStatu
 
 import json
 import random
@@ -42,7 +43,7 @@ def doCreate(request):
 
     course = Course.objects.filter(name=request.POST['name'])
     if course.exists():
-        return info(request, INFO_SAME_NAME, 'Course'+INFO_STR[INFO_SAME_NAME])
+        return info(request, INFO_SAME_NAME, INFO_STR[INFO_SAME_NAME]%('Course', 'name'))
 
     # do create
     data = {
@@ -94,13 +95,33 @@ def getCM(cid):
     cmem = CourseMember.objects.filter(cid=cid)
     cm = []
     for c in cmem:
-        uid = c.uid
-        user = User.objects.get(pk=uid)
+        uname = User.objects.get(pk=c.uid).nickname
         cm.append({
-            'uname': user.nickname,
+            'uname': uname,
             'uprivilege': c.types
         })
     return cm
+
+def getHw(cid):
+    homeworks = Homework.objects.filter(cid=cid)
+    hw = []
+    for h in homeworks:
+        ctrname = User.objects.get(pk=h.ctrid).nickname
+        ans = 'Display after closed!'
+        if h.status == 2:
+            ans = h.answer
+        hw.append({
+            'id': h.pk,
+            'ctrname': ctrname,
+            'title': h.title,
+            'description': h.description,
+            'tips': h.tips,
+            'answer': ans,
+            'status': h.status
+            # TODO: not all necessary
+            # types?
+        })
+    return hw
 
 def coursePage(request, cname):
     course = get_object_or_404(Course, name=cname)
@@ -131,10 +152,16 @@ def coursePage(request, cname):
     except:
         return info(request, INFO_DB_ERR)
 
+    try:
+        hw = getHw(course.pk)
+    except:
+        return info(request, INFO_DB_ERR)
+
     data = {
         'course': course,
         'creator': creator,
-        'cm': cm
+        'cm': cm,
+        'hw': hw
     }
 
     # check privilege
@@ -287,7 +314,7 @@ def doChgUserPriv(request, cname, uname):
     # get cm and check
     cu = get_object_or_404(User, nickname=uname)
     if user.pk == cu.pk:
-        return info(request, INFO_CANTB_YS, 'User'+INFO_STR[INFO_CANTB_YS])
+        return info(request, INFO_CANTB_SELF, INFO_STR[INFO_CANTB_SELF]%'User')
     try:
         ccm = CourseMember.objects.get(cid=c.pk, uid=cu.pk)
     except:
@@ -295,7 +322,7 @@ def doChgUserPriv(request, cname, uname):
     if cm.types >= ccm.types:
         raise PermissionDenied
     if ccm.types == priv2:
-        return info(request, INFO_CANTB_SAME, 'Privilege'+INFO_STR[INFO_CANTB_SAME])
+        return info(request, INFO_CANTB_SAME, INFO_STR[INFO_CANTB_SAME]%'Privilege')
     if cm.types >= priv2:
         raise PermissionDenied
 

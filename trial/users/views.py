@@ -36,7 +36,7 @@ def doSignup(request):
         return rd
 
     if request.POST['password'] != request.POST['password2']:
-        return info(request, INFO_NOT_MATCH, 'Password '+INFO_STR[INFO_NOT_MATCH])
+        return info(request, INFO_NOT_MATCH, INFO_STR[INFO_NOT_MATCH]%'Password')
 
     data = {
         'nickname': request.POST['userName'],
@@ -55,11 +55,11 @@ def doSignup(request):
     # TODO: add sameName checker(check in time!)
     u = User.objects.filter(nickname=data['nickname']);
     if u.exists():
-        return info(request, INFO_SAME_NAME, 'User '+INFO_STR[INFO_SAME_NAME])
+        return info(request, INFO_SAME, INFO_STR[INFO_SAME]%('User', 'name'))
 
     u = User.objects.filter(email=data['email']);
     if u.exists():
-        return info(request, INFO_SAME_NAME, 'User '+INFO_STR[INFO_SAME_NAME])
+        return info(request, INFO_SAME, INFO_STR[INFO_SAME]%('User', 'email'))
 
     # TODO: more checks here (safer password & email format)
     # save to database
