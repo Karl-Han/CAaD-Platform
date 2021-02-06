@@ -14,3 +14,14 @@
     {% endfor %}
   </ul>
 </div>
+
+<div id="Homeworks">
+  <h5>Homeworks:</h5>
+  <ul>
+    {% for h in hw %}
+    <li>
+      <a href="/homeworks/{{ h.id }}">{{ h.title }} ({{ h.status }})</a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>

@@ -8,4 +8,14 @@
 <h5>status：{{ hw.status }}</h5>
 <h5>创建日期：{{ hw.cr_date }}</h5>
 <h5>结束日期：{{ hw.cl_date }}</h5>
-<h5>TODO: hwSt</h5>
+
+<div id="HomeworkStatus">
+  <h5>HomeworkStatus:</h5>
+  <ul>
+    {% for hs in hSt %}
+    <li>
+      <a href="/homeworks/commitments/{{ hs.id }}">{{ hs.uname }} ({{ hs.types }})</a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>

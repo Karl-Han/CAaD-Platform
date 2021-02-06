@@ -89,7 +89,18 @@ def doCreate(request):
 
     return info(request, SUCCESS)
 
-# TODO: signals and auto date change
+def getHs(hid):
+    hwSt = HomeworkStatu.objects.filter(hid=hid)
+    hs = []
+    for _hs in hwSt:
+        uname = User.objects.get(pk=_hs.uid).nickname
+        hs.append({
+            'id': _hs.pk,
+            'types': _hs.types,
+            'uname': uname
+        })
+    return hs
+
 def getHomework(request, hid):
     # get h u c cm
     h = get_object_or_404(Homework, pk=hid)
@@ -114,6 +125,7 @@ def getHomework(request, hid):
     if h.status == 2:
         ans = h.answer
     hw = {
+        'id': h.pk,
         'title': h.title,
         'description': h.description,
         'cname': c.name,
@@ -127,14 +139,109 @@ def getHomework(request, hid):
         'cl_date': str(h.close_date)
     }
 
+    try:
+        hs = getHs(h.pk)
+    except:
+        return info(request, INFO_DB_ERR)
+
     data = {
-        'hw': hw
+        'hw': hw,
+        'hSt': hs
     }
 
     # return
     if request.method == 'GET':
-        return render(request, 'homework/homework.html', data)
+        if cm.types<3:
+            return render(request, 'homework/homeworkM.html', data)
+        else:
+            hs = HomeworkStatu.objects.filter(uid=user.pk)
+            if hs.exists():
+                hs = hs[0]  # only one
+                data['hs'] = {
+                    'answer': hs.answer,
+                    'types': hs.types,
+                    'grades': hs.grades,
+                    'comment': hs.comment,
+                    'status': hs.status
+                }
+            return render(request, 'homework/homeworkS.html', data)
     elif request.method == 'POST':
         return render(request, 'info.html', {'info': json.dumps(data)})
     else:
         raise PermissionDenied
+
+def commitHomework(request, hid):
+    if request.method != 'POST':
+        raise PermissionDenied
+
+    crd_st, rd = checkReqData(request, post=['answer'])
+    if crd_st == -1:
+        return rd
+
+    cu_st, tmp = checkUser(request)
+    if not cu_st == 1:
+        return tmp
+    user = tmp
+
+    # check homework and course
+    h = Homework.objects.filter(pk=hid)
+    if not h.exists():
+        return info(request, INFO_NOT_EXIST, INFO_STR[INFO_NOT_EXIST]%'[Hacker?] Homework')
+    h = h[0]
+
+    try:
+        c = Course.objects.get(pk=h.cid)
+    except:
+        return info(request, INFO_DB_ERR)
+
+    # check privilege
+    try:
+        cm = CourseMember.objects.get(uid=user.pk, cid=c.pk)
+    except:
+        return info(request, INFO_DB_ERR)
+    if cm.types != 3:  # not student?
+        return info(request, INFO_HACKER)
+
+    # check committed
+    hs = HomeworkStatu.objects.filter(cid=c.pk, uid=user.pk, hid=h.pk)
+    if hs.exists():
+        hs = hs[0]
+        hs.answer = request.POST['answer']
+        hs.status = 2*h.status
+        try:
+            hs.save()
+        except:
+            return info(request, INFO_HACKER)
+    else:
+        data = {
+            'cid': c.pk,
+            'uid': user.pk,
+            'hid': h.pk,
+            'types': 0,
+            'answer': request.POST['answer'],
+            'grades': -1,  # default
+            'comment': '',  # default
+            'status': 2*h.status
+        }
+        #return render(request, 'info.html', {'info': json.dumps(data, indent=4, sort_keys=True, default=str)})  # debug
+
+        try:
+            hs = HomeworkStatu(
+                cid = data['cid'],
+                uid = data['uid'],
+                hid = data['hid'],
+                types = data['types'],
+                answer = data['answer'],
+                grades = data['grades'],
+                comment = data['comment'],
+                status = data['status']
+            )
+            hs.save()
+        except:
+            return info(request, INFO_HACKER)
+
+    return info(request, SUCCESS)
+
+def getHomeworkStatu(request, hsid):
+    return info(request, 0, 'TODO')
+

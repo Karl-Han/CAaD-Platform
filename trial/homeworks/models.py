@@ -20,13 +20,16 @@ class Homework(models.Model):
     close_date = models.DateTimeField('date to close')
 
 class HomeworkStatu(models.Model):
-    cid = models.IntegerField('course id')
+    cid = models.IntegerField('course id')  # not imp?
     uid = models.IntegerField('user id')
     hid = models.IntegerField('homework id')
 
+    #types = ( (0, 'uncomment'), (1, 'commented') )
+    types = models.IntegerField('homework types')
+    answer = models.CharField('answer', max_length=1024)
     grades = models.IntegerField('grades')
     comment = models.CharField('comment', max_length=1024)
 
-    #status = ( (0, 'manager?(reserved)'), (1, 'undo&intime'), (2, 'done&intime'), (3, 'undo&timeout'), (4, 'done&timeout') )
+    #status = ( (0, '(reserved)'), (1, 'undo&intime'), (2, 'done&intime'), (3, 'undo&timeout'), (4, 'done&timeout') )
     status = models.IntegerField('status')
 

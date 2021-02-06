@@ -26,6 +26,7 @@ python manage.py runserver
 - delete user and change privilege in a course
 - Homework models and create homework in a course
 - get homework and auto update homework status (signals)
+- commit homework for student
 
 ## TODO
 - See projects in github
