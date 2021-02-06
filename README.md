@@ -23,7 +23,9 @@ python manage.py runserver
 - my courses in user profile (getUC)
 - member list in course page (getCM)
 - update password in a course
-- delete user in a course
+- delete user and change privilege in a course
+- Homework models and create homework in a course
+- get homework and auto update homework status (signals)
 
 ## TODO
 - See projects in github

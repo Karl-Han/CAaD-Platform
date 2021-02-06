@@ -15,3 +15,26 @@
     {% endfor %}
   </ul>
 </div>
+
+<div id="Homeworks">
+  <button onclick="document.getElementById('pbHw').hidden=false;">发布作业</button>
+  <form style="background:darkgray;" id="pbHw" hidden=true action="/homeworks/doCreate" method="post">
+    {% csrf_token %}
+    <input hidden=true name="cname" value="{{ course.name }}"/>
+    题目：<input name="title"/></br>
+    描述：<input name="description"/></br>
+    提示：<input name="tips"/></br>
+    答案：<input name="answer"/></br>
+    开放时间(s)（TODO）：<input name="runsec"/></br>
+    <input type="submit" value="发布">
+  </form>
+
+  <ul>
+    {% for h in hw %}
+    <li>
+      <a href="/homeworks/{{ h.id }}">{{ h.title }} ({{ h.status }})</a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+

@@ -24,6 +24,9 @@ def doCreate(request):
     crd_st, rd = checkReqData(request, post=['cname', 'title', 'description', 'tips', 'answer', 'runsec'])  # TODO: docker
     if crd_st == -1:
         return rd
+    # check delta (>0)
+    if int(request.POST['runsec']) <= 0:
+        return info(request, INFO_HACKER)
 
     cu_st, tmp = checkUser(request)
     if not cu_st == 1:
@@ -39,10 +42,10 @@ def doCreate(request):
     # check privilege
     try:
         cm = CourseMember.objects.get(uid=creator.pk, cid=c.pk)
-        if cm.types >= 2:  # not admin or teacher
-            raise PermissionDenied
     except:
         return info(request, INFO_HACKER)
+    if cm.types >= 3:  # student
+        raise PermissionDenied
 
     # check same homework ?
     homework = Homework.objects.filter(cid=c.pk)
@@ -86,13 +89,52 @@ def doCreate(request):
 
     return info(request, SUCCESS)
 
+# TODO: signals and auto date change
 def getHomework(request, hid):
-    # get and check
-    return info(request, 0, 'test')
+    # get h u c cm
+    h = get_object_or_404(Homework, pk=hid)
+    try:
+        c = Course.objects.get(pk=h.cid)
+        ctr = User.objects.get(pk=h.ctrid)
+    except:
+        return info(request, INFO_DB_ERR)
 
-    if request.method != 'GET':
-        pass
-    elif request.method != 'POST':
-        pass
+    cu_st, tmp = checkUser(request)
+    if not cu_st == 1:
+        return tmp
+    user = tmp
+
+    # check privilege
+    try:
+        cm = CourseMember.objects.get(cid=c.pk, uid=user.pk)
+    except:
+        raise PermissionDenied
+
+    ans = 'Display after closed!'
+    if h.status == 2:
+        ans = h.answer
+    hw = {
+        'title': h.title,
+        'description': h.description,
+        'cname': c.name,
+        'ctrname': ctr.nickname,
+        'tips': h.tips,
+        'answer': ans,
+        'dockerAPI': 'TODO',
+        'status': h.status,
+        'types': 'TODO',
+        'cr_date': str(h.create_date),
+        'cl_date': str(h.close_date)
+    }
+
+    data = {
+        'hw': hw
+    }
+
+    # return
+    if request.method == 'GET':
+        return render(request, 'homework/homework.html', data)
+    elif request.method == 'POST':
+        return render(request, 'info.html', {'info': json.dumps(data)})
     else:
         raise PermissionDenied
