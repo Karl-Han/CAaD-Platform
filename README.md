@@ -26,7 +26,7 @@ python manage.py runserver
 - delete user and change privilege in a course
 - Homework models and create homework in a course
 - get homework and auto update homework status (signals)
-- commit homework for student
+- commit homework for student and score homework for teacher
 
 ## TODO
 - See projects in github
@@ -36,18 +36,13 @@ python manage.py runserver
 - move self apis to utils (Done)
 - get 10 elems in getUC/getCM(change to API) (TODO)
 
-## Index
-- /users/signup: signup page
-- /users/login: login page
-- /users/\<user nickname\>: user profile
-- /courses/: courses index
-- /courses/createCourse: create course
-- /courses/\<course name\>: course page
-- /courses/\<course name\>/join: join course api(for visitor)
+## Urls
+(see urls.py)
 
 ## Addition
 ### signed up users (for testing)
-- 123:123
-- 121:121
-- 111:111
+- 123:123  admin
+- 121:121  teacher
+- 111:111  studert
+- 222:222  visitor
 

@@ -166,6 +166,8 @@ def getHomework(request, hid):
                 }
             return render(request, 'homework/homeworkS.html', data)
     elif request.method == 'POST':
+        # TODO: check M/S?
+        return info(request, 0, 'TODO')
         return render(request, 'info.html', {'info': json.dumps(data)})
     else:
         raise PermissionDenied
@@ -243,5 +245,94 @@ def commitHomework(request, hid):
     return info(request, SUCCESS)
 
 def getHomeworkStatu(request, hsid):
-    return info(request, 0, 'TODO')
+    hs = get_object_or_404(HomeworkStatu, pk=hsid)
+    try:
+        c = Course.objects.get(pk=hs.cid)
+    except:
+        return info(request, INFO_DB_ERR)
 
+    cu_st, tmp = checkUser(request)
+    if not cu_st == 1:
+        return tmp
+    user = tmp
+
+    # check privilege
+    try:
+        cm = CourseMember.objects.get(cid=c.pk, uid=user.pk)
+    except:
+        raise PermissionDenied
+
+    hwSt = {
+        'id': hs.pk,
+        'cname': c.name,
+        'answer': hs.answer,
+        'types': hs.types,
+        'status': hs.status
+    }
+    if hs.types == 1:
+        hwSt['grades'] = hs.grades
+        hwSt['comment'] = hs.comment
+
+    data = {
+        'hs': hwSt
+    }
+
+    # return
+    if request.method == 'GET':
+        if cm.types<3:
+            return render(request, 'homeworkStatus/hsM.html', data)
+        if hs.uid == user.pk:
+            return render(request, 'homeworkStatus/hsS.html', data)
+        raise PermissionDenied
+    elif request.method == 'POST':
+        return info(request, 0, 'POST')
+        # TODO: check M/S?
+        return info(request, 0, 'TODO')
+    else:
+        raise PermissionDenied
+
+def scoreHomework(request, hsid):
+    if request.method != 'POST':
+        raise PermissionDenied
+
+    # get hs u c cm
+    hs = HomeworkStatu.objects.filter(pk=hsid)
+    if not hs.exists():
+        return info(request, INFO_HACKER)
+    hs = hs[0]
+
+    crd_st, rd = checkReqData(request, post=['grades', 'comment'])
+    if crd_st == -1:
+        return rd
+    # check grades (>0)
+    if int(request.POST['grades'])<0 or int(request.POST['grades'])>100:
+        return info(request, INFO_HACKER)
+
+    cu_st, tmp = checkUser(request)
+    if not cu_st == 1:
+        return tmp
+    user = tmp
+
+    try:
+        c = Course.objects.get(pk=hs.cid)
+    except:
+        return info(request, INFO_DB_ERR)
+
+    cm = CourseMember.objects.filter(cid=c.pk, uid=user.pk)
+    if not cm.exists():
+        return info(request, INFO_HACKER)
+    cm = cm[0]
+
+    # check privilege
+    if cm.types >= 3:
+        return info(request, INFO_HACKER)
+
+    try:
+        hs.grades = int(request.POST['grades'])
+        hs.comment = request.POST['comment']
+        hs.types = 1
+        hs.save()
+    except:
+        return info(request, INFO_DB_ERR)
+
+    return info(request, SUCCESS)

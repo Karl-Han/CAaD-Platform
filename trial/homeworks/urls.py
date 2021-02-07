@@ -7,6 +7,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('doCreate', views.doCreate, name='docreate'),
     path('commitments/<int:hsid>', views.getHomeworkStatu, name='getHomeworkStatu'),
+    path('commitments/<int:hsid>/score', views.scoreHomework, name='scoreHomework'),
     path('<int:hid>', views.getHomework, name='getHomework'),
     path('<int:hid>/commit', views.commitHomework, name='commitHomework')
 ]

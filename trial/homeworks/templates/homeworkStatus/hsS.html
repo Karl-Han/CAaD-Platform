@@ -1,0 +1,9 @@
+<h1>Self<h1>
+<h5>课程名：{{ hs.cname }}</h5>
+<h5>status：{{ hs.status }}</h5>
+<h5>types：{{ hs.types }}</h5>
+<h5>学生答案：{{ hs.answer }}</h5>
+{% if hs.types == 1 %}
+<h5>成绩：{{ hs.grades }}</h5>
+<h5>评价：{{ hs.comment }}</h5>
+{% endif %}
