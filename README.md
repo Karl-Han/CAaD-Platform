@@ -27,6 +27,7 @@ python manage.py runserver
 - Homework models and create homework in a course
 - get homework and auto update homework status (signals)
 - commit homework for student and score homework for teacher
+- File model
 
 ## TODO
 - See projects in github

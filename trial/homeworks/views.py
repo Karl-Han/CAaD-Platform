@@ -160,7 +160,7 @@ def getHomework(request, hid):
                 data['hs'] = {
                     'answer': hs.answer,
                     'types': hs.types,
-                    'grades': hs.grades,
+                    'score': hs.score,
                     'comment': hs.comment,
                     'status': hs.status
                 }
@@ -221,9 +221,10 @@ def commitHomework(request, hid):
             'hid': h.pk,
             'types': 0,
             'answer': request.POST['answer'],
-            'grades': -1,  # default
+            'score': -1,  # default
             'comment': '',  # default
-            'status': 2*h.status
+            'status': 2*h.status,
+            'commit_date': timezone.now()
         }
         #return render(request, 'info.html', {'info': json.dumps(data, indent=4, sort_keys=True, default=str)})  # debug
 
@@ -234,9 +235,10 @@ def commitHomework(request, hid):
                 hid = data['hid'],
                 types = data['types'],
                 answer = data['answer'],
-                grades = data['grades'],
+                score = data['score'],
                 comment = data['comment'],
-                status = data['status']
+                status = data['status'],
+                commit_date = data['commit_date']
             )
             hs.save()
         except:
@@ -267,10 +269,11 @@ def getHomeworkStatu(request, hsid):
         'cname': c.name,
         'answer': hs.answer,
         'types': hs.types,
-        'status': hs.status
+        'status': hs.status,
+        'cm_date': str(hs.commit_date)
     }
     if hs.types == 1:
-        hwSt['grades'] = hs.grades
+        hwSt['score'] = hs.score
         hwSt['comment'] = hs.comment
 
     data = {
@@ -301,11 +304,11 @@ def scoreHomework(request, hsid):
         return info(request, INFO_HACKER)
     hs = hs[0]
 
-    crd_st, rd = checkReqData(request, post=['grades', 'comment'])
+    crd_st, rd = checkReqData(request, post=['score', 'comment'])
     if crd_st == -1:
         return rd
-    # check grades (>0)
-    if int(request.POST['grades'])<0 or int(request.POST['grades'])>100:
+    # check score (>0)
+    if int(request.POST['score'])<0 or int(request.POST['score'])>100:
         return info(request, INFO_HACKER)
 
     cu_st, tmp = checkUser(request)
@@ -328,7 +331,7 @@ def scoreHomework(request, hsid):
         return info(request, INFO_HACKER)
 
     try:
-        hs.grades = int(request.POST['grades'])
+        hs.score = int(request.POST['score'])
         hs.comment = request.POST['comment']
         hs.types = 1
         hs.save()
