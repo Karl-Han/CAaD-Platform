@@ -9,13 +9,34 @@
 <h5>创建日期：{{ hw.cr_date }}</h5>
 <h5>结束日期：{{ hw.cl_date }}</h5>
 
-<div id="HomeworkStatus">
-  <h5>HomeworkStatus:</h5>
-  <ul>
-    {% for hs in hSt %}
-    <li>
-      <a href="/homeworks/commitments/{{ hs.id }}">{{ hs.uname }} ({{ hs.types }})</a>
-    </li>
-    {% endfor %}
-  </ul>
+<div id="uploadFIle">
+  <form id="doUpload" action="/files/upload/hw" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input hidden=true name="hid" value="{{ hw.id }}"/>
+    <input type="file" name="hfile">
+    <input type="submit" value="上传文件">
+    </form>
 </div>
+
+<div id="files">
+<h5>Files:</h5>
+<ul>
+  {% for fh in fhs %}
+  <li>
+    <a href="{{ fh.url }}">{{ fh.name }}</a>
+  </li>
+  {% endfor %}
+</ul>
+</div>
+
+<div id="HomeworkStatus">
+<h5>HomeworkStatus:</h5>
+<ul>
+  {% for hs in hSt %}
+  <li>
+    <a href="/homeworks/commitments/{{ hs.id }}">{{ hs.uname }} ({{ hs.types }})</a>
+  </li>
+  {% endfor %}
+</ul>
+</div>
+

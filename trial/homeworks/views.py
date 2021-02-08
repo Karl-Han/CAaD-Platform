@@ -12,6 +12,7 @@ import datetime
 
 from utils.check import info, checkReqData, checkUser
 from utils.status import *
+from .utils import getHs, getFh
 
 # Create your views here.
 def index(request):
@@ -89,18 +90,6 @@ def doCreate(request):
 
     return info(request, SUCCESS)
 
-def getHs(hid):
-    hwSt = HomeworkStatu.objects.filter(hid=hid)
-    hs = []
-    for _hs in hwSt:
-        uname = User.objects.get(pk=_hs.uid).nickname
-        hs.append({
-            'id': _hs.pk,
-            'types': _hs.types,
-            'uname': uname
-        })
-    return hs
-
 def getHomework(request, hid):
     # get h u c cm
     h = get_object_or_404(Homework, pk=hid)
@@ -141,12 +130,14 @@ def getHomework(request, hid):
 
     try:
         hs = getHs(h.pk)
+        fh = getFh(h.pk)
     except:
         return info(request, INFO_DB_ERR)
 
     data = {
         'hw': hw,
-        'hSt': hs
+        'hSt': hs,
+        'fhs': fh
     }
 
     # return

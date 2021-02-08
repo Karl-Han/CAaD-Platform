@@ -13,8 +13,9 @@ INFO_CANTB_SELF = -6
 INFO_REFRESH = -7
 INFO_NOT_MATCH = -8
 INFO_NOT_EXIST = -9
-INFO_DB_ERR = -10
-INFO_UNKNOW = -11
+INFO_LIMIT = -10
+INFO_DB_ERR = -11
+INFO_UNKNOW = -12
 
 INFO_STR = {
     INFO_HACKER: 'Hacker?110!',
@@ -26,6 +27,7 @@ INFO_STR = {
     INFO_CANTB_SAME: '%s can not be same!',
     INFO_CANTB_SELF: '%s can not be yourself!',
     INFO_NOT_EXIST: '%s not exist!',
+    INFO_LIMIT: '%s limited %d!',
     INFO_DB_ERR: 'Database error!',
     INFO_UNKNOW: 'Something wrong!',
     SUCCESS: 'Success!',

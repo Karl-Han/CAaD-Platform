@@ -14,10 +14,6 @@ import os
 from utils.check import info, Visitor, checkTokenTimeoutOrLogout, checkReqData, checkUser
 from utils.status import *
 
-class Visitor:
-    nickname = 'Visitor'
-    token = 'None'
-
 # Create your views here.
 def index(request):
     return HttpResponse("Hello, world. <a href=\"/users/login\">login</a>")

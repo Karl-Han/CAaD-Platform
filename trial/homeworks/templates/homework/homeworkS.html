@@ -15,6 +15,17 @@
     <h5>创建日期：{{ hw.cr_date }}</h5>
     <h5>结束日期：{{ hw.cl_date }}</h5>
 
+    <div id="files">
+      <h5>Files:</h5>
+      <ul>
+        {% for fh in fhs %}
+        <li>
+          <a href="{{ fh.url }}">{{ fh.name }}</a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
     </br>
     <div id="cmtHw">
       <h5>提交作业：</h5>

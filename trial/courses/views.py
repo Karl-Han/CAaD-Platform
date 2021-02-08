@@ -12,6 +12,7 @@ import random
 
 from utils.check import info, Visitor, checkTokenTimeoutOrLogout, checkUserLoginOrVisitor, checkReqData, checkUser
 from utils.status import *
+from .utils import getRandCPwd, getCM, getHw
 
 # Create your views here.
 def index(request):
@@ -23,9 +24,6 @@ def index(request):
 
 def createCourse(request):
     return render(request, 'create/create.html', {})
-
-def getRandCPwd(dic='1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ', length=8):
-    return ''.join(random.sample(dic, length))
 
 def doCreate(request):
     if request.method != 'POST':
@@ -90,38 +88,6 @@ def doCreate(request):
         'href': '/courses/'+c.name
     }
     return render(request, 'info.html', {'info': json.dumps(data)})
-
-def getCM(cid):
-    cmem = CourseMember.objects.filter(cid=cid)
-    cm = []
-    for c in cmem:
-        uname = User.objects.get(pk=c.uid).nickname
-        cm.append({
-            'uname': uname,
-            'uprivilege': c.types
-        })
-    return cm
-
-def getHw(cid):
-    homeworks = Homework.objects.filter(cid=cid)
-    hw = []
-    for h in homeworks:
-        ctrname = User.objects.get(pk=h.ctrid).nickname
-        ans = 'Display after closed!'
-        if h.status == 2:
-            ans = h.answer
-        hw.append({
-            'id': h.pk,
-            'ctrname': ctrname,
-            'title': h.title,
-            'description': h.description,
-            'tips': h.tips,
-            'answer': ans,
-            'status': h.status
-            # TODO: not all necessary
-            # types?
-        })
-    return hw
 
 def coursePage(request, cname):
     course = get_object_or_404(Course, name=cname)

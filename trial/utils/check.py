@@ -63,24 +63,29 @@ def checkUserLoginOrVisitor(request):
     user = user[0]
     return 1, user
 
-def checkReqData(request, post=[], cookies=[]):
+def checkReqData(request,  **kwargs):
+    post = kwargs.pop('post', [])
+    cookies = kwargs.pop('cookies', [])
+    files = kwargs.pop('files', [])
     try:
         for p in post:
             request.POST[p]
         for c in cookies:
             request.COOKIES[c]
+        for f in files:
+            request.FILES[f]
         return 1, None
     except:
-        return -1, info(request, INFO_HACKER, INFO_STR[INFO_HACKER])
+        return -1, info(request, INFO_HACKER)
 
 def checkUser(request):
     culv_st, user = checkUserLoginOrVisitor(request)
     if culv_st == -1:
-        return -2, info(request, INFO_LOGIN, INFO_STR[INFO_LOGIN])
+        return -2, info(request, INFO_LOGIN)
     elif culv_st == -2:  # user not exitst
-        return -3, info(request, INFO_HACKER, INFO_STR[INFO_HACKER])
+        return -3, info(request, INFO_HACKER)
 
     if checkTokenTimeoutOrLogout(user):
-        return -4, info(request, INFO_LOGIN, INFO_STR[INFO_LOGIN])
+        return -4, info(request, INFO_LOGIN)
     return 1, user
 

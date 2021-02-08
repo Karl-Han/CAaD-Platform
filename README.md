@@ -27,7 +27,7 @@ python manage.py runserver
 - Homework models and create homework in a course
 - get homework and auto update homework status (signals)
 - commit homework for student and score homework for teacher
-- File model
+- File model and upload homeworkfile and get homeworkfile in homeworkPage
 
 ## TODO
 - See projects in github
@@ -36,6 +36,7 @@ python manage.py runserver
 ## Optimization
 - move self apis to utils (Done)
 - get 10 elems in getUC/getCM(change to API) (TODO)
+- hash filename
 
 ## Urls
 (see urls.py)
