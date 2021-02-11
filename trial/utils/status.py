@@ -15,7 +15,8 @@ INFO_NOT_MATCH = -8
 INFO_NOT_EXIST = -9
 INFO_LIMIT = -10
 INFO_DB_ERR = -11
-INFO_UNKNOW = -12
+INFO_UNZIP_ERR = -12
+INFO_UNKNOW = -13
 
 INFO_STR = {
     INFO_HACKER: 'Hacker?110!',
@@ -29,6 +30,7 @@ INFO_STR = {
     INFO_NOT_EXIST: '%s not exist!',
     INFO_LIMIT: '%s limited %d!',
     INFO_DB_ERR: 'Database error!',
+    INFO_UNZIP_ERR: 'Zip error!',
     INFO_UNKNOW: 'Something wrong!',
     SUCCESS: 'Success!',
     FAIL: 'Fail!',

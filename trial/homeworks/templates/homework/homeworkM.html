@@ -1,42 +1,94 @@
+<html>
+  <head>
+    <title>M</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static "public/css/main.css" %}">
+  </head>
+  <body>
+    <h5>题目：{{ hw.title }}</h5>
+    <h5>创建人：{{ hw.ctrname }}</h5>
+    <h5>课程：{{ hw.cname }}</h5>
+    <h5>描述：{{ hw.description }}</h5>
+    <h5>提示：{{ hw.tips }}</h5>
+    <h5>答案：{{ hw.answer }}</h5>
+    <h5>status：{{ hw.status }}</h5>
+    <h5>创建日期：{{ hw.cr_date }}</h5>
+    <h5>结束日期：{{ hw.cl_date }}</h5>
 
-<h5>题目：{{ hw.title }}</h5>
-<h5>创建人：{{ hw.ctrname }}</h5>
-<h5>课程：{{ hw.cname }}</h5>
-<h5>描述：{{ hw.description }}</h5>
-<h5>提示：{{ hw.tips }}</h5>
-<h5>答案：{{ hw.answer }}</h5>
-<h5>status：{{ hw.status }}</h5>
-<h5>创建日期：{{ hw.cr_date }}</h5>
-<h5>结束日期：{{ hw.cl_date }}</h5>
+    <div id="uploadFIle">
+      <form id="doUpload" action="/files/upload/hw" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input hidden=true name="hid" value="{{ hw.id }}"/>
+        <input type="file" name="hfile">
+        <input type="submit" value="上传文件">
+      </form>
+    </div>
 
-<div id="uploadFIle">
-  <form id="doUpload" action="/files/upload/hw" method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <input hidden=true name="hid" value="{{ hw.id }}"/>
-    <input type="file" name="hfile">
-    <input type="submit" value="上传文件">
-    </form>
-</div>
+    <div id="files">
+    <h5>Files:</h5>
+    <ul>
+      {% for fh in fhs %}
+      <li>
+        <a href="{{ fh.url }}">{{ fh.name }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+    </div>
 
-<div id="files">
-<h5>Files:</h5>
-<ul>
-  {% for fh in fhs %}
-  <li>
-    <a href="{{ fh.url }}">{{ fh.name }}</a>
-  </li>
-  {% endfor %}
-</ul>
-</div>
+    <div id="HomeworkStatus">
+    <h5>HomeworkStatus:</h5>
+    <ul>
+      {% for hs in hSt %}
+      <li>
+        <a href="/homeworks/commitments/{{ hs.id }}">{{ hs.uname }} ({{ hs.types }})</a>
+      </li>
+      {% endfor %}
+    </ul>
+    </div>
 
-<div id="HomeworkStatus">
-<h5>HomeworkStatus:</h5>
-<ul>
-  {% for hs in hSt %}
-  <li>
-    <a href="/homeworks/commitments/{{ hs.id }}">{{ hs.uname }} ({{ hs.types }})</a>
-  </li>
-  {% endfor %}
-</ul>
-</div>
+    <div id="Docker">
+      <form id="createDocker" action="/dockers/create" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input hidden=true name="hid" value="{{ hw.id }}"/>
+        开放port(容器内)：<input name="iport"/><br/>
+        Dockerfile(zip)：<input type="file" name="dfile"/><br/>
+        <input type="submit" value="生成Docker">
+      </form>
+    </div>
 
+    <script type="text/javascript">
+      window.addEventListener("load", function () {
+        function sendDataCreateDocker() {
+          form = event.target;
+          var url = form.action;
+          var XHR = new XMLHttpRequest();
+          var FD  = new FormData(form);
+          XHR.onreadystatechange = function() {
+            if (XHR.readyState==4 && XHR.status==200) {
+              result = XHR.responseText.replaceAll("&quot;", "\"");
+              result = JSON.parse(result);
+              if (result["status"]) {
+                if (result["status"] == 1) {
+                  confirm("Created!");
+                  console.log(result["oport"])
+                } else {
+                  alert("[Debug] "+result["reason"])  // TODO
+                }
+              } else {
+                alert("[Debug] POST error");  // TODO
+              }
+            }
+          }
+          XHR.open("POST", url);
+          XHR.send(FD);
+        }
+        var form = document.getElementById("createDocker");
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+          sendDataCreateDocker();
+        });
+      });
+    </script>
+
+  </body>
+</html>
