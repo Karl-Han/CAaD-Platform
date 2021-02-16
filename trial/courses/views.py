@@ -248,6 +248,14 @@ def doDelUser(request, cname, uname):
     except:
         return info(request, INFO_DB_ERR)
 
+    # del hs
+    hs = HomeworkStatu.objects.filter(uid=du.pk, cid=c.pk)
+    try:
+        for i in hs:
+            i.delete()
+    except:
+        return info(request, INFO_DB_ERR)
+
     return info(request, SUCCESS)
 
 def doChgUserPriv(request, cname, uname):

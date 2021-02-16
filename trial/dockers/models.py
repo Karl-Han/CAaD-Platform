@@ -16,7 +16,7 @@ class DockerStatu(models.Model):
     # status info
     #types = ( (0, 'reserved') )
     types = models.IntegerField('types')
-    #status = ( (0, 'none'), (1, 'creatting'), (2, 'fail'), (3, 'running'), (4, updating) )
+    #status = ( (0, 'none'), (1, 'creatting'), (2, 'fail'), (3, 'running'), (4, updating), (5, deling) )
     status = models.IntegerField('status')
     create_date = models.DateTimeField('date created')
     update_date = models.DateTimeField('date last update')

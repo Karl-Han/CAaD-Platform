@@ -47,6 +47,15 @@
     </div>
 
     <div id="Docker">
+      {% if dk and dk != None %}
+      Docker: {{ dk.host }} {{ dk.port }} ({{ dk.status }})
+      <form id="delDocker" action="/dockers/delete" method="post">
+        {% csrf_token %}
+        <input hidden=true name="hid" value="{{ hw.id }}"/>
+        <input type="submit" value="删除Docker">
+      </form>
+      <!--TODO: delete-->
+      {% else %}
       <form id="createDocker" action="/dockers/create" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <input hidden=true name="hid" value="{{ hw.id }}"/>
@@ -54,6 +63,7 @@
         Dockerfile(zip)：<input type="file" name="dfile"/><br/>
         <input type="submit" value="生成Docker">
       </form>
+      {% endif %}
     </div>
 
     <script type="text/javascript">

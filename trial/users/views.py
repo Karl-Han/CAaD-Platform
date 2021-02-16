@@ -9,10 +9,10 @@ from courses.models import Course, CourseMember
 
 from Crypto.Hash import SHA3_512
 import json
-import os
 
 from utils.check import info, Visitor, checkTokenTimeoutOrLogout, checkReqData, checkUser
 from utils.status import *
+from .utils import genToken
 
 # Create your views here.
 def index(request):
@@ -101,12 +101,9 @@ def doLogin(request):
         return info(request, WA_PWD2)
 
     # get token (random)
-    hObj = SHA3_512.new()
-    hObj.update(bytes(user.nickname, 'utf8')+os.urandom(32))
-    token = hObj.hexdigest()
-    user.token = token
+    user.token = genToken(user.nickname)
+    user.last_login = timezone.now()
     try:
-        user.last_login = timezone.now()
         user.save()
     except:
         return info(request, INFO_DB_ERR)
@@ -115,7 +112,7 @@ def doLogin(request):
     data = {
         'status': 1,
         'data': {
-            'token': token,
+            'token': user.token,
             'href': '/users/'+user.nickname  # TODO: abstract users here
         }
     }

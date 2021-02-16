@@ -15,7 +15,7 @@ import docker
 from utils.check import info, checkReqData, checkUser
 from utils.status import *
 from utils.parms import DOCKER_SERVER_URL, DOCKER_NAME_PRE
-from .utils import unzip, checkPort, randPort
+from .utils import unzip, checkPort, randPort, rmDockerDir, isSameFile
 
 # Create your views here.
 def index(request):
@@ -54,6 +54,7 @@ def createDocker(request):
     # fd
     try:
         fd = FileDocker.objects.get(hid=hid)
+        # TODO: check dup
     except:
         try:
             fd = FileDocker(
@@ -62,14 +63,14 @@ def createDocker(request):
                 hid = hid,
                 file = request.FILES['dfile']
             )
-            fd.file.name = 'docker/'+str(hid)
+            fd.file.name = '%d.zip'%hid
             fd.save()
         except:
             return info(request, INFO_DB_ERR)
 
     # unzip
     uzsrc = fd.file.path
-    uzdst = '/'.join(uzsrc.split('/')[:-1])+'/out/'
+    uzdst = '/'.join(uzsrc.split('/')[:-1])+'/%d/'%hid
     df_pth = unzip(uzsrc, uzdst)
     if df_pth == False:
         return info(request, INFO_UNZIP_ERR)
@@ -81,6 +82,9 @@ def createDocker(request):
 
     ds = DockerStatu.objects.filter(hid=hid)
     if ds.exists():
+        # building
+        if ds.status == 1:
+            return info(request, INFO_CTRING)
         # do delete old images and containers and set default
         ds = ds[0]
         if ds.ctnid != '':
@@ -120,6 +124,10 @@ def createDocker(request):
         rm=True,
         tag=tag_name
     )]
+    try:
+        rmDockerDir(hid)
+    except:
+        return info(request, INFO_OS_ERR)
 
     # check success
     dk_chk = json.loads(response[-1])
@@ -181,6 +189,73 @@ def createDocker(request):
     }
     return render(request, 'info.html', {'info': json.dumps(data)})
 
+def deleteDocker(request):
+    if request.method != 'POST':
+        raise PermissionDenied
 
+    crd_st, rd = checkReqData(request, post=['hid'])
+    if crd_st == -1:
+        return rd
+    try:
+        hid = int(request.POST['hid'])
+    except:
+        return info(request, INFO_HACKER)
 
+    # check u
+    cu_st, tmp = checkUser(request)
+    if not cu_st == 1:
+        return tmp
+    user = tmp
 
+    # check cm
+    try:
+        h = Homework.objects.get(pk=hid)
+        c = Course.objects.get(pk=h.cid)
+        cm = CourseMember.objects.get(cid=c.pk, uid=user.pk)
+    except:
+        return info(request, INFO_HACKER)
+    if cm.types >= 3:
+        return info(request, INFO_HACKER)
+
+    # del fd
+    try:
+        fd = FileDocker.objects.get(hid=hid)
+    except:
+        return info(request, INFO_DB_ERR)
+    fd.file.delete()
+    fd.delete()
+
+    # get ds
+    c = docker.Client(base_url=DOCKER_SERVER_URL)
+    try:
+        ds = DockerStatu.objects.get(hid=hid)
+        ds.status = 5  # lock
+        ds.save()
+    except:
+        return info(request, INFO_DB_ERR)
+
+    # del container
+    c.remove_container(container=ds.ctnid)
+    try:
+        ds.ctnid = ''
+        ds.save()
+    except:
+        return info(request, INFO_DB_ERR)
+
+    # del image
+    c.remove_image(image=ds.imgid)
+    try:
+        ds.imgid = ''
+        ds.save()
+    except:
+        return info(request, INFO_DB_ERR)
+
+    # 
+    try:
+        ds.delete()
+    except:
+        return info(request, INFO_DB_ERR)
+
+    return info(request, SUCCESS)
+
+# TODO: update (use signals)

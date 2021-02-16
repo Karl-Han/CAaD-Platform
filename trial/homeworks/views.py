@@ -12,7 +12,7 @@ import datetime
 
 from utils.check import info, checkReqData, checkUser
 from utils.status import *
-from .utils import getHs, getFh
+from .utils import getHs, getFh, getDk
 
 # Create your views here.
 def index(request):
@@ -131,13 +131,15 @@ def getHomework(request, hid):
     try:
         hs = getHs(h.pk)
         fh = getFh(h.pk)
+        dk = getDk(h.pk)
     except:
         return info(request, INFO_DB_ERR)
 
     data = {
         'hw': hw,
         'hSt': hs,
-        'fhs': fh
+        'fhs': fh,
+        'dk': dk
     }
 
     # return

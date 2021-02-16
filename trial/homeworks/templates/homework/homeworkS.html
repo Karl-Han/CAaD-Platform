@@ -26,6 +26,13 @@
       </ul>
     </div>
 
+    <div id="Docker">
+      Docker: 
+      {% if dk and dk != None %}
+      {{ dk.host }} {{ dk.port }} ({{ dk.status }})
+      {% endif %}
+    </div>
+
     </br>
     <div id="cmtHw">
       <h5>提交作业：</h5>
