@@ -83,7 +83,7 @@ def createDocker(request):
     ds = DockerStatu.objects.filter(hid=hid)
     if ds.exists():
         # building
-        if ds.status == 1:
+        if ds.status == SDK_CRTING:
             return info(request, INFO_CTRING)
         # do delete old images and containers and set default
         ds = ds[0]
@@ -95,7 +95,7 @@ def createDocker(request):
             ds.imgid = ''
         ds.iport = -1
         ds.oport = -1
-        ds.status = 0
+        ds.status = SDK_NONE
         try:
             ds.save()
         except:
@@ -111,7 +111,7 @@ def createDocker(request):
                 iport = iport,
                 oport = -1,
                 types = 0,
-                status = 1,
+                status = SDK_CRTING,
                 create_date = timezone.now(),
                 update_date = timezone.now()
             )
@@ -142,7 +142,7 @@ def createDocker(request):
             return info(request, INFO_UNKNOW)
 
         try:
-            ds.status = 2
+            ds.status = SDK_FAIL
             ds.save()
         except:
             return info(request, INFO_DB_ERR)
@@ -156,7 +156,7 @@ def createDocker(request):
                 return info(request, INFO_DB_ERR)
         else:         # fail
             try:
-                ds.status = 0
+                ds.status = SDK_NONE
                 ds.save()
             except:
                 return info(request, INFO_DB_ERR)
@@ -177,7 +177,7 @@ def createDocker(request):
     try:
         ds.ctnid = ctnid
         ds.oport = oport
-        ds.status = 3
+        ds.status = SDK_RUNNING
         ds.update_date = timezone.now()
         ds.save()
     except:
@@ -229,7 +229,7 @@ def deleteDocker(request):
     c = docker.Client(base_url=DOCKER_SERVER_URL)
     try:
         ds = DockerStatu.objects.get(hid=hid)
-        ds.status = 5  # lock
+        ds.status = SDK_DELING  # lock
         ds.save()
     except:
         return info(request, INFO_DB_ERR)

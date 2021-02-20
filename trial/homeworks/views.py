@@ -63,7 +63,7 @@ def doCreate(request):
         'tips': request.POST['tips'],
         'answer': request.POST['answer'],
         'dockerAPI': 'TODO',
-        'status': 1,
+        'status': SH_RUNNING,
         'types': 0,  # TODO
         'create_date': timezone.now(),
         'close_date': timezone.now()+datetime.timedelta(seconds=int(request.POST['runsec']))
@@ -111,7 +111,7 @@ def getHomework(request, hid):
         raise PermissionDenied
 
     ans = 'Display after closed!'
-    if h.status == 2:
+    if h.status == SH_CLOSED:
         ans = h.answer
     hw = {
         'id': h.pk,

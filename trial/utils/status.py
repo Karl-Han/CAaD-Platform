@@ -42,5 +42,46 @@ INFO_STR = {
     WA_PWD2: 'Wrong name or password!'
 }
 
+# models status and types
+# user
+SU_UNACT = 0
+SU_NORMAL = 1
+SU_BAN = 2
+SU_CANCEL = 3
 
-#  TODO: models status here
+# course
+SC_TBACT = 0
+SC_UNSTART = 1
+SC_RUNNING = 2
+SC_CLOSED = 3
+
+# courseMember
+TCM_ADMIN = 0
+TCM_TEACHER = 1
+TCM_ASISTANT = 2
+TCM_STUDENT = 3
+
+# homework
+SH_DRAFT = 0
+SH_RUNNING = 1
+SH_CLOSED = 2
+
+# homeworkStatu
+SHS_UD_IT = 1
+SHS_DN_IT = 2*SH_RUNNING  # 2
+SHS_UD_TO = 3
+SHS_DN_TO = 2*SH_CLOSED   # 4
+
+THS_UNCOMMENT = 0
+THS_COMMENTED = 1
+
+# docker
+SDK_NONE = 0
+SDK_CRTING = 1
+SDK_FAIL = 2
+SDK_RUNNING = 3
+SDK_UPDATING = 4
+SDK_DELING = 5
+
+
+

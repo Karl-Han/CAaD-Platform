@@ -11,7 +11,7 @@ class Course(models.Model):
     description = models.CharField('description', max_length=512)
 
     # status info
-    #status = ( (0, 'to be activate'), (1, 'unstarted'), (2, 'running'), (3, 'finished') )
+    #status = ( (0, 'to be activate'), (1, 'unstarted'), (2, 'running'), (3, 'closed') )
     status = models.IntegerField('course status')
     types = models.IntegerField('course types')  # reserved
     create_date = models.DateTimeField('date created up')

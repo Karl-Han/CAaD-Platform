@@ -41,7 +41,7 @@ def doSignup(request):
         'realname': request.POST['realName'],
         'uid': request.POST['uid'],
         'privilege': 5,
-        'status': 1,  # TODO: email activatived
+        'status': SU_NORMAL,  # TODO: email activatived
         'signup_date': timezone.now(),
         'last_login': timezone.now(),
         'token': '',  # TODo: activity code here

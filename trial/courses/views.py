@@ -49,7 +49,7 @@ def doCreate(request):
         'password': getRandCPwd(),
         'ctrid': user.id,
         'description': request.POST['description'],
-        'status': 0,
+        'status': SC_RUNNING,  # TODO: activate
         'types': 0,  # reserved
         'create_date': timezone.now(),
         'popularity': 0
