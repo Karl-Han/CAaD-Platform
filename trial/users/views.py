@@ -1,11 +1,16 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied
+from django.urls import reverse
+from django.views import View
+from django.db import IntegrityError
+
 
 from users.models import User
 from courses.models import Course, CourseMember
+from users.form import UserForm
 
 from Crypto.Hash import SHA3_512
 import json
@@ -18,66 +23,46 @@ from .utils import genToken
 def index(request):
     return HttpResponse("Hello, world. <a href=\"/users/login\">login</a>")
 
-def signup(request):
-    context = {}
-    return render(request, 'signup/signup.html', context)
+class SignupView(View):
+    template_name = 'signup/signup.html'
 
-def doSignup(request):
-    if request.method != 'POST':
-        raise PermissionDenied
+    def get(self, request):
+        if context == None:
+            context = {}
+        return render(request, self.template_name, context)
 
-    # POST payload check
-    crd_st, rd = checkReqData(request, post=['userName', 'password', 'password2', 'email', 'realName', 'uid'])
-    if crd_st == -1:
-        return rd
+    def post(self, request):
+        form = UserForm(request.POST)
 
-    if request.POST['password'] != request.POST['password2']:
-        return info(request, INFO_NOT_MATCH, INFO_STR[INFO_NOT_MATCH]%'Password')
+        if request.POST['password'] != request.POST['password2']:
+            return info(request, INFO_NOT_MATCH, INFO_STR[INFO_NOT_MATCH]%'Password')
 
-    data = {
-        'nickname': request.POST['userName'],
-        'password': make_password(request.POST['password'], salt=None, hasher='default'),
-        'email': request.POST['email'],
-        'realname': request.POST['realName'],
-        'uid': request.POST['uid'],
-        'privilege': 5,
-        'status': SU_NORMAL,  # TODO: email activatived
-        'signup_date': timezone.now(),
-        'last_login': timezone.now(),
-        'token': '',  # TODo: activity code here
-    }
+        if form.is_valid():
+            # Check on 
+            # * valid of email
+            # * unique of nickname and email
 
-    # same name & email
-    # TODO: add sameName checker(check in time!)
-    u = User.objects.filter(nickname=data['nickname']);
-    if u.exists():
-        return info(request, INFO_SAME, INFO_STR[INFO_SAME]%('User', 'name'))
-
-    u = User.objects.filter(email=data['email']);
-    if u.exists():
-        return info(request, INFO_SAME, INFO_STR[INFO_SAME]%('User', 'email'))
-
-    # TODO: more checks here (safer password & email format)
-    # save to database
-    try:
-        u = User(
-            nickname = data['nickname'],
-            password = data['password'],
-            email = data['email'],
-            realname = data['realname'],
-            uid = data['uid'],
-            privilege = data['privilege'],
-            status = data['status'],
-            signup_date = data['signup_date'],
-            last_login = data['last_login'],
-            token = data['token']
-        )
-        u.save()
-        return info(request, SUCCESS)
-    except:
-        return info(request, INFO_DB_ERR)
-
-    #return render(request, 'info.html', {'info': json.dumps(data, indent=4, sort_keys=True, default=str)})  # TODO: write database and remove str
+            form.cleaned_data['privilege'] = 5
+            form.cleaned_data['status'] = SU_NORMAL
+            form.cleaned_data['token'] = ''
+            form.cleaned_data['password'] = make_password(form.cleaned_data['password'])
+            
+            form.save()
+            return HttpResponseRedirect(reverse("users:user_index"))
+        else:
+            # ToDo: 
+            # display error in the signup page and restore nickname and email
+            print("ERROR in form")
+            errors = []
+            context = {}
+            for field in form:
+                errors.append(str(field.errors))
+            error_str = '\n'.join(errors)
+            context['nickname'] = request.POST['nickname']
+            context['email'] = request.POST['email']
+            context['error_message'] = error_str
+            # return render(request, self.template_name, {'error_message': error_str})
+            return HttpResponseRedirect(reverse('users:signup', kwargs=context))
 
 def login(request):
     context = {}
@@ -168,39 +153,3 @@ def profile(request, ownerName):
             'owner': owner
         }
         return render(request, 'profile/other.html', data)
-
-'''
-def getUC(request):  # get courses joined in 
-    if request.method != 'POST':
-        raise PermissionDenied
-        #return HttpResponse('POST method only!', status=403)
-
-    # checks
-    crd_st, rd = checkReqData(request, cookies=['utk'])
-    if crd_st == -1:
-        return rd
-
-    cu_st, tmp = checkUser(request)
-    if not cu_st == 1:
-        return tmp
-    user = tmp
-
-    cmem = CourseMember.objects.filter(uid=user.pk)
-    uc = []
-    for cm in cmem:
-        try:
-            course = Course.objects.get(pk=cm.cid)
-            uc.append({
-                'cname': course.name,
-                'cpopularity': course.popularity,
-                'uprivilege': cm.types
-            })
-        except:
-            return info(request, INFO_DB_ERR)
-
-    data = {
-        'status': 1,
-        'data': uc
-    }
-    return render(request, 'info.html', {'info': json.dumps(data)})
-'''

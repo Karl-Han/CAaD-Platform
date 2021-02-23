@@ -1,14 +1,15 @@
 from django.urls import path
 
 from . import views
+from .views import SignupView
 
 app_name = 'users'
 urlpatterns = [
-    path('', views.index, name='index'),
-    path('signup', views.signup, name='signup'),
-    path('doSignup', views.doSignup, name='doSignup'),
-    path('login', views.login, name='login'),
-    path('doLogin', views.doLogin, name='doLogin'),
-    path('getUC', views.getUC, name='getUC'),
-    path('<str:ownerName>', views.profile, name='profile'),
+    path(r'', views.index, name='user_index'),
+    path(r'signup', SignupView.as_view(), name='signup'),
+    # path(r'doSignup', views.doSignup, name='doSignup'),
+    path(r'login', views.login, name='login'),
+    path(r'doLogin', views.doLogin, name='doLogin'),
+    path(r'getUC', views.getUC, name='getUC'),
+    path(r'profile/<str:ownerName>', views.profile, name='profile'),
 ]

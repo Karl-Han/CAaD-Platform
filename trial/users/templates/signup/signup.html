@@ -6,14 +6,14 @@
   </head>
   <body>
     {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
-    <form id="doSignup" action="{% url "users:doSignup" %}" method="POST">
+    <form id="doSignup" action="/users/signup" method="POST">
       {% csrf_token %}
-      用户名: <input name="userName" id="uname"></input><p class="necessary">*</p></br>
+      用户名: <input name="nickname" id="uname"></input><p class="necessary">*</p></br>
       密码: <input name="password" type="password" id="pwd1"></input><p class="necessary">*</p></br>
       确认密码: <input name="password2" type="password" id="pwd2"></input><p class="necessary">*</p></br>
       电子邮箱: <input name="email" id="email"></input><p class="necessary">*</p></br>
       <!-- TODO: send an email for activating -->
-      真实姓名: <input name="realName"></input></br>
+      真实姓名: <input name="realname"></input></br>
       学号: <input name="uid"></input></br>
       <input type="submit" value="submit">
     </form>
