@@ -1,6 +1,8 @@
 from users.models import User
 from homeworks.models import HomeworkStatu
 from files.models import FileHomework
+from dockers.models import DockerStatu
+from utils.parms import DOCKER_SERVER_HOST
 
 def getHs(hid):
     hwSt = HomeworkStatu.objects.filter(hid=hid)
@@ -24,3 +26,14 @@ def getFh(hid):
         })
     return fh
 
+def getDk(hid):
+    try:
+        dk = DockerStatu.objects.get(hid=hid)
+    except:
+        return None
+    data = {
+        'host': DOCKER_SERVER_HOST,
+        'port': dk.oport,
+        'status': dk.status
+    }
+    return data

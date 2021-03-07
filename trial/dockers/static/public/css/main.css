@@ -1,0 +1,10 @@
+
+body {
+  background-color: gray;
+}
+
+.necessary {
+  color: red;
+  font-weight: bold;
+  display:inline;
+}

@@ -63,3 +63,4 @@ def uploadHomeworkFile(request):
         return info(request, INFO_DB_ERR)
 
     return info(request, SUCCESS)
+

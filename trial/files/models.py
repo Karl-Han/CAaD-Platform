@@ -24,3 +24,9 @@ class FileHomeworkStatu(File):
     file = RestrictedFileField(upload_to='hs/%Y/%m/%d/', max_length=100, max_upload_size=5242880, 
             content_types=['application/pdf', 'application/excel', 'application/msword', 'text/plain', 'text/csv', 'application/zip', 'image/jpeg', 'image/gif', 'image/gif', 'image/bmp', 'image/tiff'])
 
+class FileDocker(File):
+    hid = models.IntegerField('homework id')
+    file = RestrictedFileField(upload_to='docker/',     # default name: hid
+            max_length=100, max_upload_size=104857600,  # enough?
+            content_types=['application/zip'])          # TODO: more types
+

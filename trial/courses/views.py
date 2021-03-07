@@ -49,7 +49,7 @@ def doCreate(request):
         'password': getRandCPwd(),
         'ctrid': user.id,
         'description': request.POST['description'],
-        'status': 0,
+        'status': SC_RUNNING,  # TODO: activate
         'types': 0,  # reserved
         'create_date': timezone.now(),
         'popularity': 0
@@ -245,6 +245,14 @@ def doDelUser(request, cname, uname):
     # do delete
     try:
         dcm.delete()
+    except:
+        return info(request, INFO_DB_ERR)
+
+    # del hs
+    hs = HomeworkStatu.objects.filter(uid=du.pk, cid=c.pk)
+    try:
+        for i in hs:
+            i.delete()
     except:
         return info(request, INFO_DB_ERR)
 

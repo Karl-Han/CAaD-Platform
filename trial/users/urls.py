@@ -1,14 +1,14 @@
 from django.urls import path
+# from django.contrib.auth.views import LoginView
 
 from . import views
+from .views import SignupView, LoginView
+from trial.views import index
 
 app_name = 'users'
 urlpatterns = [
-    path('', views.index, name='index'),
-    path('signup', views.signup, name='signup'),
-    path('doSignup', views.doSignup, name='doSignup'),
-    path('login', views.login, name='login'),
-    path('doLogin', views.doLogin, name='doLogin'),
-    path('getUC', views.getUC, name='getUC'),
-    path('<str:ownerName>', views.profile, name='profile'),
+    path(r'', LoginView.as_view(), name='login'),
+    path(r'signup/', SignupView.as_view(), name='signup'),
+    path(r'login/', LoginView.as_view(), name='login'),
+    path(r'profile/<str:username>', views.profile, name='profile'),
 ]

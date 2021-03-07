@@ -16,6 +16,12 @@ python manage.py runserver
 #python manage.py shell
 ```
 
+## clean
+```
+rm -rf media/
+rm db.sqlite3
+```
+
 ## DONE
 - signup && login && naive profile
 - create course && naive course page
@@ -28,6 +34,8 @@ python manage.py runserver
 - get homework and auto update homework status (signals)
 - commit homework for student and score homework for teacher
 - File model and upload homeworkfile and get homeworkfile in homeworkPage
+- create docker from dockerfile
+- delete Docker and get docker status in homewokr (getDk) and delete HomeworkStatu when delete user
 
 ## TODO
 - See projects in github

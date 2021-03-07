@@ -1,209 +1,67 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse
-from django.contrib.auth.hashers import make_password, check_password
-from django.utils import timezone
-from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse, HttpResponseRedirect
+from django.contrib.auth import authenticate, login
+from django.urls import reverse
+from django.views import View
 
-from users.models import User
+from .models import User
+from .form import UserForm, LoginForm
 from courses.models import Course, CourseMember
 
-from Crypto.Hash import SHA3_512
-import json
-import os
+from .utils import get_enrolled_courses
 
-from utils.check import info, Visitor, checkTokenTimeoutOrLogout, checkReqData, checkUser
-from utils.status import *
+class SignupView(View):
+    template_name = 'signup/signup.html'
 
-# Create your views here.
-def index(request):
-    return HttpResponse("Hello, world. <a href=\"/users/login\">login</a>")
+    def get(self, request):
+        user = UserForm()
+        context = {"form": user}
+        return render(request, self.template_name, context)
 
-def signup(request):
+    def post(self, request):
+        form = UserForm(request.POST)
+
+        if form.is_valid():
+            # Save it
+            form.save()
+            return HttpResponseRedirect(reverse("users:login"))
+        context = {'form': form}
+        return render(request, self.template_name, context)
+
+class LoginView(View):
+    template_name = 'login/login.html'
+
+    def get(self, request):
+        form = LoginForm()
+        print(form)
+        context = { "form": form }
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        user = authenticate(request, username=request.POST['username'], password=request.POST['password'])
+        print(user)
+
+        if user is None:
+            # Not an authenticated user
+            print("Not Authenticated")
+            context = { 'form': LoginForm(request.POST), 'error': "No such user or wrong password"}
+            return render(request, self.template_name, context=context)
+        login(request, user)
+
+        return render(request, 'info.html', {'info': "Successfully login"})
+
+def profile(request, username):
+    owner = get_object_or_404(User, username=username)
     context = {}
-    return render(request, 'signup/signup.html', context)
 
-def doSignup(request):
-    if request.method != 'POST':
-        raise PermissionDenied
-
-    # POST payload check
-    crd_st, rd = checkReqData(request, post=['userName', 'password', 'password2', 'email', 'realName', 'uid'])
-    if crd_st == -1:
-        return rd
-
-    if request.POST['password'] != request.POST['password2']:
-        return info(request, INFO_NOT_MATCH, INFO_STR[INFO_NOT_MATCH]%'Password')
-
-    data = {
-        'nickname': request.POST['userName'],
-        'password': make_password(request.POST['password'], salt=None, hasher='default'),
-        'email': request.POST['email'],
-        'realname': request.POST['realName'],
-        'uid': request.POST['uid'],
-        'privilege': 5,
-        'status': 1,  # TODO: email activatived
-        'signup_date': timezone.now(),
-        'last_login': timezone.now(),
-        'token': '',  # TODo: activity code here
-    }
-
-    # same name & email
-    # TODO: add sameName checker(check in time!)
-    u = User.objects.filter(nickname=data['nickname']);
-    if u.exists():
-        return info(request, INFO_SAME, INFO_STR[INFO_SAME]%('User', 'name'))
-
-    u = User.objects.filter(email=data['email']);
-    if u.exists():
-        return info(request, INFO_SAME, INFO_STR[INFO_SAME]%('User', 'email'))
-
-    # TODO: more checks here (safer password & email format)
-    # save to database
-    try:
-        u = User(
-            nickname = data['nickname'],
-            password = data['password'],
-            email = data['email'],
-            realname = data['realname'],
-            uid = data['uid'],
-            privilege = data['privilege'],
-            status = data['status'],
-            signup_date = data['signup_date'],
-            last_login = data['last_login'],
-            token = data['token']
-        )
-        u.save()
-        return info(request, SUCCESS)
-    except:
-        return info(request, INFO_DB_ERR)
-
-    #return render(request, 'info.html', {'info': json.dumps(data, indent=4, sort_keys=True, default=str)})  # TODO: write database and remove str
-
-def login(request):
-    context = {}
-    return render(request, 'login/login.html', context)
-
-def doLogin(request):
-    if request.method != 'POST':
-        raise PermissionDenied
-
-    # POST payload check
-    crd_st, rd = checkReqData(request, post=['name', 'password'])
-    if crd_st == -1:
-        return rd
-
-    user = User.objects.filter(nickname=request.POST['name'])
-    if not user.exists():  # user not exitst
-        return info(request, WA_PWD2)
-
-    user = user[0]  # should be unique
-    if not check_password(request.POST['password'], user.password): # password not match
-        return info(request, WA_PWD2)
-
-    # get token (random)
-    hObj = SHA3_512.new()
-    hObj.update(bytes(user.nickname, 'utf8')+os.urandom(32))
-    token = hObj.hexdigest()
-    user.token = token
-    try:
-        user.last_login = timezone.now()
-        user.save()
-    except:
-        return info(request, INFO_DB_ERR)
-
-    # success
-    data = {
-        'status': 1,
-        'data': {
-            'token': token,
-            'href': '/users/'+user.nickname  # TODO: abstract users here
-        }
-    }
-    return render(request, 'info.html', {'info': json.dumps(data)})
-
-def getUC(user):  # get courses joined in 
-    cmem = CourseMember.objects.filter(uid=user.pk)
-    uc = []
-    for cm in cmem:
-        course = Course.objects.get(pk=cm.cid)
-        uc.append({
-            'cname': course.name,
-            'cpopularity': course.popularity,
-            'uprivilege': cm.types
-        })
-    return uc
-
-def profile(request, ownerName):
-    # TODO: render self or other (template)
-    owner = get_object_or_404(User, nickname=ownerName)
-    if 'utk' in request.COOKIES and len(request.COOKIES['utk'])==128:
-        user = User.objects.filter(token=request.COOKIES['utk'])
-        if not user.exists():
-            user = Visitor()  # TODO: optimize
-        else:
-            user = user[0]
+    # Get login user
+    # * if user_id == user.pk -> print self profile + enrolled courses
+    # * not equal -> print open profile
+    print(owner)
+    if request.user.is_authenticated and request.user.pk == owner.pk:
+        context["course_info_list"] = get_enrolled_courses(request.user)
     else:
-        user = Visitor()
+        context["others_name"] = owner.get_username()
 
-    if user.token!='' and len(user.token)==128 and ownerName==user.nickname:
-        try:
-            if checkTokenTimeoutOrLogout(user):
-                data = {
-                    'user': Visitor(),  # logout
-                    'owner': owner
-                }
-                return render(request, 'profile/other.html', data)
-            else:
-                try:
-                    uc = getUC(user)
-                except:
-                    return info(request, INFO_DB_ERR)
-                data = {
-                    'user': user,
-                    'uc': uc
-                }
-                return render(request, 'profile/self.html', data)
-        except:
-            return info(request, INFO_UNKNOW)
-    else:
-        data = {
-            'user': user,
-            'owner': owner
-        }
-        return render(request, 'profile/other.html', data)
-
-'''
-def getUC(request):  # get courses joined in 
-    if request.method != 'POST':
-        raise PermissionDenied
-        #return HttpResponse('POST method only!', status=403)
-
-    # checks
-    crd_st, rd = checkReqData(request, cookies=['utk'])
-    if crd_st == -1:
-        return rd
-
-    cu_st, tmp = checkUser(request)
-    if not cu_st == 1:
-        return tmp
-    user = tmp
-
-    cmem = CourseMember.objects.filter(uid=user.pk)
-    uc = []
-    for cm in cmem:
-        try:
-            course = Course.objects.get(pk=cm.cid)
-            uc.append({
-                'cname': course.name,
-                'cpopularity': course.popularity,
-                'uprivilege': cm.types
-            })
-        except:
-            return info(request, INFO_DB_ERR)
-
-    data = {
-        'status': 1,
-        'data': uc
-    }
-    return render(request, 'info.html', {'info': json.dumps(data)})
-'''
+    print(context)
+    return render(request, 'profile/profile.html', context)
