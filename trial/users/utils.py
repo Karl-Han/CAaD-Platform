@@ -1,8 +1,13 @@
-import os
-from Crypto.Hash import SHA3_512
+from courses.models import CourseMember
 
-def genToken(nickname):
-    hObj = SHA3_512.new()
-    hObj.update(bytes(nickname, 'utf8')+os.urandom(32))
-    token = hObj.hexdigest()
-    return token
+def get_enrolled_courses(user):
+    enrolled_courses = CourseMember.objects.filter(user=user)
+    course_info_list = []
+    for role in enrolled_courses:
+        course = role.course
+        course_info_list.append({
+            'name': course.name,
+            'id': course.pk,
+            'role': role.type
+        })
+    return course_info_list 

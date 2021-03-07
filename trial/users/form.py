@@ -1,13 +1,13 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 
-from .models import User
+# from .models import UserAuxiliary
 
-
-class UserForm(forms.ModelForm):
-    # No need for a clean_email because it has already been 
-    # clean by the Validator
-    # def clean_email():
+class UserForm(UserCreationForm):
+    email = forms.EmailField(
+        max_length=254, help_text='Required. Inform a valid email address.')
 
     class Meta:
         model = User
@@ -15,17 +15,17 @@ class UserForm(forms.ModelForm):
         verbose_name_plural = 'Users'
 
         fields = (
-            'nickname', 'password', 'email', 
-            'uid', 'realname'
+            'username', 'password1', 'password2', 'email' 
+            # 'uid', 'realname'
         )
 
     def __init__(self, *args, **kwargs):
         super(UserForm, self).__init__(*args, **kwargs)
-        # self.fields['uid'].required = False
-        # self.fields['realname'].required = False
 
-    # # Clean fields: nickname, email
-    # def clean_nickname(self):
-    #     u = User.objects.filter(nickname=self.nickname)
-    #     if u.exists():
-    #         raise 
+class LoginForm(forms.Form):
+    # email = forms.EmailField(label='email')
+    username = forms.CharField(max_length=256)
+    password = forms.CharField(widget=forms.PasswordInput())
+
+    def __init__(self, *args, **kwargs):
+        super(LoginForm, self).__init__(*args, **kwargs)
