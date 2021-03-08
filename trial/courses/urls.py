@@ -4,12 +4,13 @@ from . import views
 
 app_name = 'courses'
 urlpatterns = [
-    path('', views.index, name='index'),
-    path('create', views.createCourse, name='create'),
-    path('doCreate', views.doCreate, name='doCreate'),
-    path('<str:cname>', views.coursePage, name='coursePage'),
-    path('<str:cname>/join', views.doJoin, name='doJoin'),
-    path('<str:cname>/newpwd', views.doChangePwd, name='doChangePwd'),
-    path('<str:cname>/<str:uname>/del', views.doDelUser, name='doDelUser'),
-    path('<str:cname>/<str:uname>/spriv', views.doChgUserPriv, name='doChgUserPriv'),
+    path('', views.IndexListView.as_view(), name='index'),
+    path('create', views.CreatecourseView.as_view(), name='create'),
+    path('<int:course_id>', views.coursePage, name='homepage'),
+    path('<int:course_id>/edit', views.coursePage, name='edit'),
+    path('<int:course_id>/join', views.doJoin, name='join'),
+
+    # TODOs
+    # path('<int:course_id>/students', views.manageStudents, name='manage_students'),
+    # path('<int:course_id>/announcements', views.manageAnnounce, name='manage_announce'),
 ]
