@@ -2,10 +2,15 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied
+from django.views.generic import View, ListView, DetailView
+from Crypto.Hash import SHA3_256
+from datetime import datetime
 
 from users.models import User
-from courses.models import Course, CourseMember
+from .models import Course, CourseMember
 from homeworks.models import Homework, HomeworkStatu
+from .forms import CourseForm
+import courses.utils as utils
 
 import json
 import random
@@ -14,80 +19,45 @@ from utils.check import info, Visitor, checkTokenTimeoutOrLogout, checkUserLogin
 from utils.status import *
 from .utils import getRandCPwd, getCM, getHw
 
-# Create your views here.
-def index(request):
-    popularCourse10 = Course.objects.order_by('-popularity')[:10]
-    data = {
-        'pcourses': popularCourse10
-    }
-    return render(request, 'index/index.html', data)
+class IndexListView(ListView):
+    queryset = Course.objects.order_by('name').all()
+    paginate_by = 2
+    context_object_name = "course_list"
+    template_name = "index/index.html"
 
-def createCourse(request):
-    return render(request, 'create/create.html', {})
+class CreatecourseView(View):
+    def get(self, request):
+        form = CourseForm()
+        return render(request, 'create/create.html', {'form': form})
 
-def doCreate(request):
-    if request.method != 'POST':
-        raise PermissionDenied
+    def post(self, request):
+        if not request.user.is_authenticated:
+            return render(request, "info.html", {"info": "User not authenticated."})
+        # Create a course for him
+        user = request.user
+        form = CourseForm(request.POST)
+        if not form.is_valid():
+            return render(request, 'info.html', {"info": "Successfully create course"})
 
-    # checks
-    crd_st, rd = checkReqData(request, post=['name', 'description'])
-    if crd_st == -1:
-        return rd
+        print(form.cleaned_data)
+        # form.cleaned_data['creator'] = user
+        obj = form.save()
+        obj.creator = user
+        obj.save()
 
-    cu_st, tmp = checkUser(request)
-    if not cu_st == 1:
-        return tmp
-    user = tmp
-
-    course = Course.objects.filter(name=request.POST['name'])
-    if course.exists():
-        return info(request, INFO_SAME_NAME, INFO_STR[INFO_SAME_NAME]%('Course', 'name'))
-
-    # do create
-    data = {
-        'name': request.POST['name'],
-        'password': getRandCPwd(),
-        'ctrid': user.id,
-        'description': request.POST['description'],
-        'status': SC_RUNNING,  # TODO: activate
-        'types': 0,  # reserved
-        'create_date': timezone.now(),
-        'popularity': 0
-    }
-    #return render(request, 'info.html', {'info': json.dumps(data, indent=4, sort_keys=True, default=str)})  # debug
-    try:
-        c = Course(
-            name = data['name'],
-            password = data['password'],
-            ctrid = data['ctrid'],
-            description = data['description'],
-            status = data['status'],
-            types = data['types'],
-            create_date = data['create_date'],
-            popularity = data['popularity']
-        )
-        c.save()
-    except Exception as e:
-        return info(request, INFO_DB_ERR)
-
-    # do add privilege
-    try:
+        # Add role in CourseMember
         cm = CourseMember(
-            cid = c.pk,
-            uid = user.pk,
-            types = 0  # creator is admin
+            course = obj, 
+            user = user,
+            type = utils.COURSEMEMBER_ADMIN
         )
         cm.save()
-    except:
-        return info(request, INFO_DB_ERR)
 
-    # success
-    data = {
-        'status': 1,
-        'reason': 'success',
-        'href': '/courses/'+c.name
-    }
-    return render(request, 'info.html', {'info': json.dumps(data)})
+        # Set user as staff
+        user.is_staff = True
+        user.save()
+
+        return render(request, 'info.html', {"info": "Successfully create course"})
 
 def coursePage(request, cname):
     course = get_object_or_404(Course, name=cname)
@@ -173,15 +143,12 @@ def doJoin(request, cname):
         return info(request, WA_PWD)
 
     # do add privilege
-    try:
-        cm = CourseMember(
-            cid = course.pk,
-            uid = user.pk,
-            types = 3  # default: student
-        )
-        cm.save()
-    except:
-        return info(request, INFO_DB_ERR)
+    cm = CourseMember(
+        cid = course.pk,
+        uid = user.pk,
+        types = utils.STUDENT
+    )
+    cm.save()
 
     return info(request, SUCCESS)
 

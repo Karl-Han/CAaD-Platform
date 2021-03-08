@@ -1,9 +1,30 @@
-<a href="{% url "courses:create" %}">创建课程</a>
+{% extends 'generics/base.html' %}
 
-{% if pcourses %}
+{% block content %}
+<div class="create_course">
+<a href="{% url "courses:create" %}">创建课程</a>
+</div>
+
+<div class="list_courses">
+<h2>Available courses list:</h2>
+{% if course_list %}
     <ul>
-    {% for course in pcourses %}
-    <li><a href="/courses/{{ course.name }}">{{ course.name }}: {{ course.popularity }}</a></li>
+    {% for course in course_list %}
+    <li><a href="{% url 'courses:homepage' course.pk %}">{{ course.name }}: {{ course.creator.username}}</a></li>
     {% endfor %}
     </ul>
 {% endif %}
+
+{% if page_obj %}
+
+{% if page_obj.has_previous %}
+<a href="?page={{ page_obj.previous_page_number }}">Last page</a>
+{% endif %}
+
+{% if page_obj.has_next %}
+<a href="?page={{ page_obj.next_page_number }}">Next page</a>
+{% endif %}
+
+{% endif %}
+</div>
+{% endblock content %}
