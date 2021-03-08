@@ -5,7 +5,6 @@
 {% endblock title %}
 
 {% block content %}
-
 {% if course_info_list == None %}
 {# Viewing from other users #}
 <p>Hello {{ user.name }}, this is profile of {{ others_name }}</p>
@@ -22,7 +21,7 @@
   <h2>My Courses:</h2>
   <ul>
     {% for course_info in course_info_list %}
-    <li><a href="{% url 'courses:profile' course_info.id%}">{{ course_info.name }}({{ course_info.role }})</a></li>
+    <li><a href="">{{ course_info.name }}({{ course_info.role }})</a></li>
     {% endfor %}
   </ul>
 {% endif %}

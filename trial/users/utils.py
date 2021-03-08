@@ -1,4 +1,5 @@
 from courses.models import CourseMember
+from courses.utils import COURSEMEMBER_TYPE
 
 def get_enrolled_courses(user):
     enrolled_courses = CourseMember.objects.filter(user=user)
@@ -8,6 +9,6 @@ def get_enrolled_courses(user):
         course_info_list.append({
             'name': course.name,
             'id': course.pk,
-            'role': role.type
+            'role': COURSEMEMBER_TYPE[role.type]
         })
     return course_info_list 

@@ -4,14 +4,14 @@ from django.contrib.auth import authenticate, login
 from django.urls import reverse
 from django.views import View
 
-from .models import User
-from .form import UserForm, LoginForm
 from courses.models import Course, CourseMember
+from .models import User
+from .forms import UserForm, LoginForm
 
 from .utils import get_enrolled_courses
 
 class SignupView(View):
-    template_name = 'signup/signup.html'
+    template_name = 'users/signup.html'
 
     def get(self, request):
         user = UserForm()
@@ -22,14 +22,13 @@ class SignupView(View):
         form = UserForm(request.POST)
 
         if form.is_valid():
-            # Save it
             form.save()
             return HttpResponseRedirect(reverse("users:login"))
         context = {'form': form}
         return render(request, self.template_name, context)
 
 class LoginView(View):
-    template_name = 'login/login.html'
+    template_name = 'users/login.html'
 
     def get(self, request):
         form = LoginForm()
@@ -39,16 +38,16 @@ class LoginView(View):
 
     def post(self, request):
         user = authenticate(request, username=request.POST['username'], password=request.POST['password'])
-        print(user)
+        # print(user)
 
         if user is None:
             # Not an authenticated user
-            print("Not Authenticated")
+            print("Not Authenticated from {}".format(request.POST['username']))
             context = { 'form': LoginForm(request.POST), 'error': "No such user or wrong password"}
             return render(request, self.template_name, context=context)
         login(request, user)
 
-        return render(request, 'info.html', {'info': "Successfully login"})
+        return render(request, 'users/info.html', {'info': "Successfully login"})
 
 def profile(request, username):
     owner = get_object_or_404(User, username=username)
@@ -64,4 +63,4 @@ def profile(request, username):
         context["others_name"] = owner.get_username()
 
     print(context)
-    return render(request, 'profile/profile.html', context)
+    return render(request, 'users/profile.html', context)

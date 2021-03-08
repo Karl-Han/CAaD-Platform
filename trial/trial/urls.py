@@ -18,11 +18,14 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from .views import index
+
 urlpatterns = [
+    path('', index, name="home"),
     path('users/', include('users.urls')),
     path('courses/', include('courses.urls')),
     path('homeworks/', include('homeworks.urls')),
     path('files/', include('files.urls')),
     path('dockers/', include('dockers.urls')),
-    #path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls),
 ] + static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
