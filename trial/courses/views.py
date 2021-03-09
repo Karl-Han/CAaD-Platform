@@ -9,7 +9,7 @@ from datetime import datetime
 from users.models import User
 from .models import Course, CourseMember
 from homeworks.models import Homework, HomeworkStatu
-from .forms import CreateCourseForm, JoinForm
+from .forms import CreateCourseForm, JoinForm, ManageStudentFormSet
 import courses.utils as utils
 
 import json
@@ -117,3 +117,16 @@ def joinCourse(request, course_id):
             CourseMember.join_course_as_student(course_id, request.user.pk)
             return render(request, "info.html", {"info": "Successfully join as student."})
     return render(request, "info.html", {"info": "Error occur in joining"})
+
+class ManageStudentView(View):
+    template_name = "courses/students.html"
+
+    def get(self, request, course_id):
+        formset = ManageStudentFormSet(course_id=course_id)
+        return render(request, self.template_name, {"formset": formset})
+
+    def post(self, request):
+        formset = ManageStudentFormSet(course_id=course_id, data=request.POST)
+        if formset.is_valid():
+            print("Fine")
+        return redirect(reverse("courses:manage_students"))
