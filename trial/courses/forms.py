@@ -2,7 +2,12 @@ from django import forms
 from .models import Course
 from courses.utils import getRandCPwd
 
-class CourseForm(forms.ModelForm):
+# class EditCourseForm(forms.ModelForm):
+#     class Meta:
+#         model = Course
+#         fields = ('name', 'password', 'description', 'is_open')
+
+class CreateCourseForm(forms.ModelForm):
     password = forms.CharField(max_length=8, required=False)
 
     def clean_password(self):
@@ -23,9 +28,9 @@ class CourseForm(forms.ModelForm):
             self.creator = creator
         else:
             print("No Creator")
-        super(CourseForm, self).__init__(*args, **kwargs)
+        super(CreateCourseForm, self).__init__(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         self.instance.creator = self.creator
-        course = super(CourseForm, self).save(*args, **kwargs)
+        course = super(CreateCourseForm, self).save(*args, **kwargs)
         return course

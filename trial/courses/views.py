@@ -1,15 +1,15 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, reverse
 from django.http import HttpResponse
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied
-from django.views.generic import View, ListView, DetailView
+from django.views.generic import View, ListView, DetailView, UpdateView
 from Crypto.Hash import SHA3_256
 from datetime import datetime
 
 from users.models import User
 from .models import Course, CourseMember
 from homeworks.models import Homework, HomeworkStatu
-from .forms import CourseForm
+from .forms import CreateCourseForm # , EditCourseForm
 import courses.utils as utils
 
 import json
@@ -29,7 +29,7 @@ class CreatecourseView(View):
     def get(self, request):
         if not request.user.is_authenticated:
             return render(request, "courses/info.html", {"info": "User not authenticated."})
-        form = CourseForm(creator=request.user)
+        form = CreateCourseForm(creator=request.user)
         return render(request, 'courses/create.html', {'form': form})
 
     def post(self, request):
@@ -37,7 +37,7 @@ class CreatecourseView(View):
             return render(request, "courses/info.html", {"info": "User not authenticated."})
         # Create a course for him
         user = request.user
-        form = CourseForm(request.POST, creator=user)
+        form = CreateCourseForm(request.POST, creator=user)
         if not form.is_valid():
             return render(request, 'courses/info.html', {"info": "Successfully create course"})
 
@@ -73,10 +73,7 @@ def coursePage(request, course_id):
     privilege = CourseMember.get_course_privilege(user.pk, course.pk)
     print(privilege)
     if course.is_open or privilege != -1:
-        context['pk'] = course_id
-        context['name'] = course.name
-        context['creator'] = course.creator
-        context['description'] = course.description
+        context['course'] = course
         if privilege == -1:
             context['role'] = "Visitor"
         else:
@@ -85,13 +82,21 @@ def coursePage(request, course_id):
     # Stage 2
     if CourseMember.is_teacher_of(user.pk, course_id):
         context['is_teacher'] = True
-        context['password'] = course.password
-        context['is_open'] = course.is_open
     
     return render(request, "courses/homepage.html", context=context)
 
-def editCourse(request, course_id):
-    pass
+class EditcourseView(UpdateView):
+    model = Course
+    fields = ['name', 'password', 'description', 'is_open']
+    success_url = "/"
+
+    def form_valid(self, form):
+        clean = form.cleaned_data
+        if clean['password'] == '':
+            self.object.password = getRandCPwd()
+            self.object.save()
+        self.success_url = reverse("courses:homepage", args=[self.object.pk])
+        return super().form_valid(form)
 
 def joinCourse(request, course_id):
     pass
