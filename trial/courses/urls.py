@@ -7,8 +7,8 @@ urlpatterns = [
     path('', views.IndexListView.as_view(), name='index'),
     path('create', views.CreatecourseView.as_view(), name='create'),
     path('<int:course_id>', views.coursePage, name='homepage'),
-    path('<int:course_id>/edit', views.coursePage, name='edit'),
-    path('<int:course_id>/join', views.doJoin, name='join'),
+    path('<int:course_id>/edit', views.editCourse, name='edit'),
+    path('<int:course_id>/join', views.joinCourse, name='join'),
 
     # TODOs
     # path('<int:course_id>/students', views.manageStudents, name='manage_students'),

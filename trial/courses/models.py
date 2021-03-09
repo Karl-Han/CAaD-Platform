@@ -34,3 +34,20 @@ class CourseMember(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     type = models.IntegerField(
         choices=MEMBER_TYPE, verbose_name='Member type')
+    
+    @classmethod
+    def get_course_privilege(cls, user_id, course_id):
+        cm = cls.objects.filter(course__pk=course_id).filter(user__pk=user_id)
+
+        if cm is not None:
+            # Probably multiple role, pick the highest privilege
+            type = 3
+            for role in cm:
+                if role.type < type:
+                    type = role.type
+            return type
+        return -1
+
+    @classmethod
+    def is_teacher_of(cls, user_id, course_id):
+        return (cls.get_course_privilege(user_id, course_id) < 3)

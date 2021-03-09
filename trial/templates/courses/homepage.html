@@ -1,0 +1,31 @@
+{% extends "generics/base.html" %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static "public/css/main.css" %}">
+
+{% block content %}
+
+{% if pk %}
+
+<h2>Welcome, {{ user.username }} as {{ role }}</h2>
+{# Basic information #}
+<h5>课程名:{{ name }}</h5>
+<h5>创建人:{{ creator.username }}</h5>
+<h5>课程描述:{{ course.description }}</h5>
+
+{% if is_teacher %}
+    <h5>加课密码:<p id="pwd">{{ password }}</p></h5>
+    <h5>
+    是否为公开课程: 
+        {% if is_open %}
+        是
+        {% else %}
+        否
+        {% endif %}
+    </h5>
+{% endif %}
+
+{% else %}
+<h1>No privilege.</h1>
+{% endif %}
+
+{% endblock content %}
