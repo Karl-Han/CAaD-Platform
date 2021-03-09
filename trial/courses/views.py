@@ -27,7 +27,9 @@ class IndexListView(ListView):
 
 class CreatecourseView(View):
     def get(self, request):
-        form = CourseForm()
+        if not request.user.is_authenticated:
+            return render(request, "info.html", {"info": "User not authenticated."})
+        form = CourseForm(creator=request.user)
         return render(request, 'create/create.html', {'form': form})
 
     def post(self, request):
@@ -35,7 +37,7 @@ class CreatecourseView(View):
             return render(request, "info.html", {"info": "User not authenticated."})
         # Create a course for him
         user = request.user
-        form = CourseForm(request.POST)
+        form = CourseForm(request.POST, creator=user)
         if not form.is_valid():
             return render(request, 'info.html', {"info": "Successfully create course"})
 

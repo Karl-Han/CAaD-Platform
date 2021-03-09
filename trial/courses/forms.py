@@ -16,4 +16,16 @@ class CourseForm(forms.ModelForm):
         fields = ('name', 'password', 'description')
 
     def __init__(self, *args, **kwargs):
+        creator = kwargs.get("creator")
+        if creator:
+            print(creator)
+            kwargs.pop("creator")
+            self.creator = creator
+        else:
+            print("No Creator")
         super(CourseForm, self).__init__(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        self.instance.creator = self.creator
+        course = super(CourseForm, self).save(*args, **kwargs)
+        return course
