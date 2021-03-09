@@ -2,11 +2,6 @@ from django import forms
 from .models import Course
 from courses.utils import getRandCPwd
 
-# class EditCourseForm(forms.ModelForm):
-#     class Meta:
-#         model = Course
-#         fields = ('name', 'password', 'description', 'is_open')
-
 class CreateCourseForm(forms.ModelForm):
     password = forms.CharField(max_length=8, required=False)
 
@@ -34,3 +29,6 @@ class CreateCourseForm(forms.ModelForm):
         self.instance.creator = self.creator
         course = super(CreateCourseForm, self).save(*args, **kwargs)
         return course
+    
+class JoinForm(forms.Form):
+    password = forms.CharField(max_length=8)

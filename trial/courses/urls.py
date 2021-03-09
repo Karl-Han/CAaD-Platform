@@ -6,7 +6,7 @@ app_name = 'courses'
 urlpatterns = [
     path('', views.IndexListView.as_view(), name='index'),
     path('create', views.CreatecourseView.as_view(), name='create'),
-    path('<int:course_id>', views.coursePage, name='homepage'),
+    path('<int:course_id>', views.homepage, name='homepage'),
     path('<int:pk>/edit', views.EditcourseView.as_view(), name='edit'),
     path('<int:course_id>/join', views.joinCourse, name='join'),
 

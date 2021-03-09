@@ -24,6 +24,15 @@
     </h5>
 {% endif %}
 
+{% if is_member %}
+{% else %}
+    <form method="post" action="{% url 'courses:join' course.pk %}">
+    {% csrf_token %}
+    {{ join_form }}
+    <input type="submit" value="Join!">
+    </form>
+{% endif %}
+
 {% else %}
 <h1>No privilege.</h1>
 {% endif %}

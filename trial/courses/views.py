@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404, reverse
+from django.shortcuts import render, get_object_or_404, reverse, redirect
 from django.http import HttpResponse
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied
@@ -9,7 +9,7 @@ from datetime import datetime
 from users.models import User
 from .models import Course, CourseMember
 from homeworks.models import Homework, HomeworkStatu
-from .forms import CreateCourseForm # , EditCourseForm
+from .forms import CreateCourseForm, JoinForm
 import courses.utils as utils
 
 import json
@@ -61,7 +61,7 @@ class CreatecourseView(View):
 
         return render(request, 'courses/info.html', {"info": "Successfully create course"})
 
-def coursePage(request, course_id):
+def homepage(request, course_id):
     course = get_object_or_404(Course, pk=course_id)
     context = {}
     user = request.user
@@ -72,17 +72,21 @@ def coursePage(request, course_id):
     # Stage 1
     privilege = CourseMember.get_course_privilege(user.pk, course.pk)
     print(privilege)
-    if course.is_open or privilege != -1:
+    if course.is_open or privilege != 4:
         context['course'] = course
-        if privilege == -1:
+        if privilege == 4:
             context['role'] = "Visitor"
+            form = JoinForm()
+            context['join_form'] = form
         else:
             context['role'] = utils.COURSEMEMBER_TYPE[privilege]
+            context['is_member'] = True
     
     # Stage 2
     if CourseMember.is_teacher_of(user.pk, course_id):
         context['is_teacher'] = True
     
+    print(context)
     return render(request, "courses/homepage.html", context=context)
 
 class EditcourseView(UpdateView):
@@ -99,4 +103,17 @@ class EditcourseView(UpdateView):
         return super().form_valid(form)
 
 def joinCourse(request, course_id):
-    pass
+    if request.method != "POST":
+        return redirect(reverse("courses:homepage", args=[course_id]))
+
+    if not request.user.is_authenticated:
+        return render(request, "info.html", {"info": "Not authenticated yet."})
+
+    # Check password and join class
+    form = JoinForm(request.POST)
+    if form.is_valid():
+        data = form.cleaned_data
+        if Course.is_password_for_course(course_id, data['password']):
+            CourseMember.join_course_as_student(course_id, request.user.pk)
+            return render(request, "info.html", {"info": "Successfully join as student."})
+    return render(request, "info.html", {"info": "Error occur in joining"})
