@@ -6,7 +6,7 @@ from users.models import User
 from .models import Course, CourseMember
 from homeworks.models import Homework, HomeworkStatu
 from .forms import CreateCourseForm, JoinForm
-import courses.utils as utils
+from courses.utils import *
 
 from .utils import getRandCPwd
 
@@ -42,7 +42,7 @@ class CreatecourseView(View):
         cm = CourseMember(
             course = obj, 
             user = user,
-            type = utils.COURSEMEMBER_ADMIN
+            type = COURSEMEMBER_ADMIN
         )
         cm.save()
 
@@ -70,7 +70,7 @@ def homepage(request, course_id):
             form = JoinForm()
             context['join_form'] = form
         else:
-            context['role'] = utils.COURSEMEMBER_TYPE[privilege]
+            context['role'] = COURSEMEMBER_TYPE[privilege]
             context['is_member'] = True
     
     # Stage 2
@@ -144,7 +144,7 @@ class ChangePrivilegeView(View):
         context = {}
         context['user_local'] = cm.user
         context['type'] = cm.type
-        context['type_readable'] = utils.COURSEMEMBER_TYPE[cm.type]
+        context['type_readable'] = COURSEMEMBER_TYPE[cm.type]
         context['course_id'] = course.pk
         context['member_record'] = member_record 
         context['privilege'] = CourseMember.get_course_privilege(request.user.pk, course.pk)
