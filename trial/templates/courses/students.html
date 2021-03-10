@@ -1,0 +1,45 @@
+{% extends 'generics/base.html' %}
+
+{% block content %}
+
+<table>
+
+<tr>
+<th hidden="True">id</th>
+<th>Course</th>
+<th>User</th>
+<th>Type</th>
+<th>Change</th>
+</tr>
+
+{% for member_record in student_list %}
+
+<tr>
+<td hidden="True">{{ member_record.pk }}</td>
+<td>{{ member_record.course }}</td>
+<td>{{ member_record.user }}</td>
+<td>{{ member_record.type }}</td>
+<td><a href="{% url 'courses:change_privilege' member_record.pk %}">Change privilege</a></td>
+</tr>
+
+{% endfor %}
+
+
+
+</table>
+
+<div class="pagination">
+    <span class="page-links">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+        <span class="page-current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+        {% endif %}
+    </span>
+</div>
+
+{% endblock content %}

@@ -26,6 +26,14 @@ class Course(models.Model):
     def __str__(self):
         return "Course({}-{})".format(self.name, self.creator.username)
 
+    @classmethod
+    def is_password_for_course(cls, course_id, pwd_to_check):
+        obj = cls.objects.get(pk=course_id)
+        if obj:
+            return (obj.password == pwd_to_check)
+        return False
+
+
 class CourseMember(models.Model):
     MEMBER_TYPE = [(0, 'admin'), (1, 'teacher'),
                    (2, 'asistant'), (3, 'student')]
@@ -34,3 +42,41 @@ class CourseMember(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     type = models.IntegerField(
         choices=MEMBER_TYPE, verbose_name='Member type')
+    
+    @classmethod
+    def get_course_privilege(cls, user_id, course_id):
+        cm = cls.objects.filter(course__pk=course_id).filter(user__pk=user_id)
+
+        if len(cm) > 0:
+            # Probably multiple role, pick the highest privilege
+            type = 3
+            for role in cm:
+                if role.type < type:
+                    type = role.type
+            return type
+        return 4
+
+    @classmethod
+    def is_teacher_of(cls, user_id, course_id):
+        return (cls.get_course_privilege(user_id, course_id) < 2)
+    
+    @classmethod
+    def join_course_as_student(cls, user_id, course_id):
+        course = Course.objects.get(pk=course_id)
+        user = User.objects.get(pk=user_id)
+        cm = cls(course=course, user=user, type=3)
+        cm.save()
+
+    @classmethod
+    def update_member_privilege_staff(cls, user_id):
+        user = User.objects.get(pk=user_id)
+        cms = CourseMember.objects.filter(user__pk=user_id)
+        type = 4
+        for cm in cms:
+            if cm.type < type:
+                type = cm.type
+        if type > 2:
+            user.is_staff = False
+        else:
+            user.is_staff = True
+        user.save()

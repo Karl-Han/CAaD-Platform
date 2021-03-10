@@ -6,7 +6,7 @@ from .models import Course, CourseMember
 class CourseAdmin(admin.ModelAdmin):
     actions_on_top = True
     actions_on_bottom = True
-    list_display = ("name", "password", "creator", "create_date")
+    list_display = ("pk", "name", "password", "creator", "create_date")
 
     fieldsets = (
         ("Main information", {

@@ -1,43 +1,36 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, reverse, redirect
 from django.http import HttpResponse
-from django.utils import timezone
-from django.core.exceptions import PermissionDenied
-from django.views.generic import View, ListView, DetailView
-from Crypto.Hash import SHA3_256
-from datetime import datetime
+from django.views.generic import View, ListView, DetailView, UpdateView
 
 from users.models import User
 from .models import Course, CourseMember
 from homeworks.models import Homework, HomeworkStatu
-from .forms import CourseForm
+from .forms import CreateCourseForm, JoinForm
 import courses.utils as utils
 
-import json
-import random
-
-from utils.check import info, Visitor, checkTokenTimeoutOrLogout, checkUserLoginOrVisitor, checkReqData, checkUser
-from utils.status import *
-from .utils import getRandCPwd, getCM, getHw
+from .utils import getRandCPwd
 
 class IndexListView(ListView):
     queryset = Course.objects.order_by('name').all()
     paginate_by = 2
     context_object_name = "course_list"
-    template_name = "index/index.html"
+    template_name = "courses/index.html"
 
 class CreatecourseView(View):
     def get(self, request):
-        form = CourseForm()
-        return render(request, 'create/create.html', {'form': form})
+        if not request.user.is_authenticated:
+            return render(request, "courses/info.html", {"info": "User not authenticated."})
+        form = CreateCourseForm(creator=request.user)
+        return render(request, 'courses/create.html', {'form': form})
 
     def post(self, request):
         if not request.user.is_authenticated:
-            return render(request, "info.html", {"info": "User not authenticated."})
+            return render(request, "courses/info.html", {"info": "User not authenticated."})
         # Create a course for him
         user = request.user
-        form = CourseForm(request.POST)
+        form = CreateCourseForm(request.POST, creator=user)
         if not form.is_valid():
-            return render(request, 'info.html', {"info": "Successfully create course"})
+            return render(request, 'courses/info.html', {"info": "Successfully create course"})
 
         print(form.cleaned_data)
         # form.cleaned_data['creator'] = user
@@ -57,221 +50,116 @@ class CreatecourseView(View):
         user.is_staff = True
         user.save()
 
-        return render(request, 'info.html', {"info": "Successfully create course"})
+        return render(request, 'courses/info.html', {"info": "Successfully create course"})
 
-def coursePage(request, cname):
-    course = get_object_or_404(Course, name=cname)
+def homepage(request, course_id):
+    course = get_object_or_404(Course, pk=course_id)
+    context = {}
+    user = request.user
 
-    st, user = checkUserLoginOrVisitor(request)
-    # check user
-    if st == -2:  # user not exitst
-        return info(request, INFO_HACKER)
+    # Two stages
+    # 1. Open to everyone or member -> basic info
+    # 2. Is teacher -> to member management
+    # Stage 1
+    privilege = CourseMember.get_course_privilege(user.pk, course.pk)
+    print(privilege)
+    if course.is_open or privilege != 4:
+        context['course'] = course
+        if privilege == 4:
+            context['role'] = "Visitor"
+            form = JoinForm()
+            context['join_form'] = form
+        else:
+            context['role'] = utils.COURSEMEMBER_TYPE[privilege]
+            context['is_member'] = True
+    
+    # Stage 2
+    if CourseMember.is_teacher_of(user.pk, course_id):
+        context['is_teacher'] = True
+    
+    print(context)
+    return render(request, "courses/homepage.html", context=context)
 
-    if checkTokenTimeoutOrLogout(user):
-        st = -1  # visistor
+class EditcourseView(UpdateView):
+    model = Course
+    fields = ['name', 'password', 'description', 'is_open']
+    success_url = "/"
 
-    # has pricilege (TODO: admin|normal)
-    try:
-        creator = User.objects.get(pk=course.ctrid)
-    except:
-        return info(request, INFO_DB_ERR)
+    def form_valid(self, form):
+        clean = form.cleaned_data
+        if clean['password'] == '':
+            self.object.password = getRandCPwd()
+            self.object.save()
+        self.success_url = reverse("courses:homepage", args=[self.object.pk])
+        return super().form_valid(form)
 
-    # Views++ -> popularity++
-    course.popularity += 1  # TODO: limit user and ip
-    try:
-        course.save()
-    except:
-        return info(request, INFO_DB_ERR)
+def joinCourse(request, course_id):
+    if request.method != "POST":
+        return redirect(reverse("courses:homepage", args=[course_id]))
 
-    try:
-        cm = getCM(course.pk)
-    except:
-        return info(request, INFO_DB_ERR)
+    if not request.user.is_authenticated:
+        return render(request, "info.html", {"info": "Not authenticated yet."})
 
-    try:
-        hw = getHw(course.pk)
-    except:
-        return info(request, INFO_DB_ERR)
+    # Check password and join class
+    form = JoinForm(request.POST)
+    if form.is_valid():
+        data = form.cleaned_data
+        if Course.is_password_for_course(course_id, data['password']):
+            CourseMember.join_course_as_student(course_id, request.user.pk)
+            return render(request, "info.html", {"info": "Successfully join as student."})
+    return render(request, "info.html", {"info": "Error occur in joining"})
 
-    data = {
-        'course': course,
-        'creator': creator,
-        'cm': cm,
-        'hw': hw
-    }
+class StudentsListView(ListView):
+    paginate_by = 10
+    template_name = 'courses/students.html'
+    context_object_name = 'student_list'
 
-    # check privilege
-    if st == -1:  # visitor
-        return render(request, 'course/courseV.html', data)  # visitor
+    def get_queryset(self):
+        user = self.request.user
+        course_id = self.kwargs['course_id']
+        privilege = CourseMember.get_course_privilege(user.pk, course_id)
+        return CourseMember.objects.filter(course__id=course_id, type__gt=privilege)
 
-    cmember = CourseMember.objects.filter(cid=course.pk)
-    cmember = cmember.filter(uid=user.pk)
-    if not cmember.exists():
-        return render(request, 'course/courseV.html', data)  # visitor
+    def get_context_data(self, *args, object_list=None, **kwargs):
+        context = super().get_context_data(*args, object_list=object_list, **kwargs)
+        context['course_id'] = self.kwargs['course_id']
 
-    cm = cmember[0]  # only one!
-    if cm.types==0:    # admin
-        return render(request, 'course/courseA.html', data)
-    elif cm.types==1:  # teacher
-        return render(request, 'course/courseT.html', data)
-    elif cm.types==2:  # asistant
-        return render(request, 'course/courseAs.html', data)
-    elif cm.types==3:  # student
-        return render(request, 'course/courseS.html', data)
+        return context
 
-def doJoin(request, cname):
-    if request.method != 'POST':
-        raise PermissionDenied
+    def get(self, request, course_id):
+        if not request.user.is_authenticated or CourseMember.get_course_privilege(request.user.pk, course_id):
+            return render(request, "courses/info.html", {"info": "User not authenticated."})
 
-    # checks
-    crd_st, rd = checkReqData(request, post=['password'])
-    if crd_st == -1:
-        return rd
+        # Authorized user
+        # self.object_list = self.object_list.filter(type__lt=CourseMember.get_course_privilege(request.user.pk, course_id))
+        return super(StudentsListView, self).get(self, request)
 
-    cu_st, tmp = checkUser(request)
-    if not cu_st == 1:
-        return tmp
-    user = tmp
+class ChangePrivilegeView(View):
+    def get(self, request, member_record):
+        course = get_object_or_404(CourseMember, pk=member_record).course
+        if not CourseMember.is_teacher_of(request.user.pk, course.pk):
+            return render(request, "courses/info.html", {"info": "User not authenticated."})
 
-    course = get_object_or_404(Course, name=cname)
-    cm = CourseMember.objects.filter(uid=user.pk, cid=course.pk)
-    if cm.exists():
-        return info(request, INFO_REFRESH, 'Added. '+INFO_STR[INFO_REFRESH])
+        cm = get_object_or_404(CourseMember, pk=member_record)
+        context = {}
+        context['user_local'] = cm.user
+        context['type'] = cm.type
+        context['type_readable'] = utils.COURSEMEMBER_TYPE[cm.type]
+        context['course_id'] = course.pk
+        context['member_record'] = member_record 
+        context['privilege'] = CourseMember.get_course_privilege(request.user.pk, course.pk)
+        return render(request, "courses/student_detail.html", context)
 
-    # TODO: password length & char check
-    if course.password != request.POST['password']:
-        return info(request, WA_PWD)
-
-    # do add privilege
-    cm = CourseMember(
-        cid = course.pk,
-        uid = user.pk,
-        types = utils.STUDENT
-    )
-    cm.save()
-
-    return info(request, SUCCESS)
-
-def doChangePwd(request, cname):
-    if request.method != 'POST':
-        raise PermissionDenied
-
-    cu_st, tmp = checkUser(request)
-    if not cu_st == 1:
-        return tmp
-    user = tmp
-
-    c = get_object_or_404(Course, name=cname)
-    cm = get_object_or_404(CourseMember, uid=user.pk, cid=c.pk)
-    hasPriv = [0, 1]
-    if not cm.types in hasPriv:
-        raise PermissionDenied
-
-    pwd = getRandCPwd()
-    try:
-        c.password = pwd
-        c.save()
-    except:
-        return info(request, INFO_DB_ERR)
-
-    # success
-    data = {
-        'status': 1,
-        'reason': 'success',
-        'pwd2': pwd
-    }
-    return render(request, 'info.html', {'info': json.dumps(data)})
-
-def doDelUser(request, cname, uname):
-    if request.method != 'POST':
-        raise PermissionDenied
-    c = get_object_or_404(Course, name=cname)
-
-    # check privilege
-    cu_st, tmp = checkUser(request)
-    if not cu_st == 1:
-        return tmp
-    user = tmp
-    try:
-        cm = CourseMember.objects.get(cid=c.pk, uid=user.pk)
-    except:
-        return info(request, INFO_DB_ERR)
-    if cm.types >= 3:
-        raise PermissionDenied
-
-    # get cm
-    du = get_object_or_404(User, nickname=uname)
-    try:
-        dcm = CourseMember.objects.get(cid=c.pk, uid=du.pk)
-    except:
-        return info(request, INFO_DB_ERR)
-
-    if cm.types >= dcm.types:  # TODO: delete itself
-        raise PermissionDenied
-
-    # do delete
-    try:
-        dcm.delete()
-    except:
-        return info(request, INFO_DB_ERR)
-
-    # del hs
-    hs = HomeworkStatu.objects.filter(uid=du.pk, cid=c.pk)
-    try:
-        for i in hs:
-            i.delete()
-    except:
-        return info(request, INFO_DB_ERR)
-
-    return info(request, SUCCESS)
-
-def doChgUserPriv(request, cname, uname):
-    if request.method != 'POST':
-        raise PermissionDenied
-    # checks
-    crd_st, rd = checkReqData(request, post=['priv2'])
-    if crd_st == -1:
-        return rd
-    mp = {'adm':0, 'tea':1, 'asi':2, 'stu':3}
-    try:
-        priv2 = mp[request.POST['priv2']]
-    except:
-        return info(request, INFO_HACKER)
-
-    c = get_object_or_404(Course, name=cname)
-
-    # check privilege
-    cu_st, tmp = checkUser(request)
-    if not cu_st == 1:
-        return tmp
-    user = tmp
-    try:
-        cm = CourseMember.objects.get(cid=c.pk, uid=user.pk)
-    except:
-        return info(request, INFO_DB_ERR)
-    if cm.types >= 3:
-        raise PermissionDenied
-
-    # get cm and check
-    cu = get_object_or_404(User, nickname=uname)
-    if user.pk == cu.pk:
-        return info(request, INFO_CANTB_SELF, INFO_STR[INFO_CANTB_SELF]%'User')
-    try:
-        ccm = CourseMember.objects.get(cid=c.pk, uid=cu.pk)
-    except:
-        return info(request, INFO_DB_ERR)
-    if cm.types >= ccm.types:
-        raise PermissionDenied
-    if ccm.types == priv2:
-        return info(request, INFO_CANTB_SAME, INFO_STR[INFO_CANTB_SAME]%'Privilege')
-    if cm.types >= priv2:
-        raise PermissionDenied
-
-    # change
-    try:
-        ccm.types = priv2
-        ccm.save()
-    except:
-        return info(request, INFO_DB_ERR)
-
-    return info(request, SUCCESS)
+    def post(self, request, member_record):
+        course = get_object_or_404(CourseMember, pk=member_record).course
+        if CourseMember.is_teacher_of(request.user.pk, course.pk):
+            cm = get_object_or_404(CourseMember, pk=member_record)
+            print(cm.user.pk)
+            print(request.POST['user_id'])
+            if cm.user.pk != int(request.POST['user_id']):
+                return render(request, "courses/info.html", {"info": "Conflicting record and user."})
+            cm.type = request.POST['privilege']
+            CourseMember.update_member_privilege_staff(cm.user.pk)
+            cm.save()
+            return redirect(reverse("courses:manage_students", args=[course.pk]))
+        return render(request, "courses/info.html", {"info": "User not authenticated."})

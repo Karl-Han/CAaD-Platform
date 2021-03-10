@@ -1,0 +1,40 @@
+{% extends "generics/base.html" %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static "public/css/main.css" %}">
+
+{% block content %}
+
+{% if course %}
+
+<h2>Welcome, {{ user.username }} as {{ role }}</h2>
+{# Basic information #}
+<h5>课程名:{{ course.name }}</h5>
+<h5>创建人:{{ course.creator.username }}</h5>
+<h5>课程描述:{{ course.description }}</h5>
+
+{% if is_teacher %}
+    <h5>加课密码:<p id="pwd">{{ course.password }}</p></h5>
+    <h5>
+    是否为公开课程: 
+        {% if course.is_open %}
+        是
+        {% else %}
+        否
+        {% endif %}
+    </h5>
+{% endif %}
+
+{% if is_member %}
+{% else %}
+    <form method="post" action="{% url 'courses:join' course.pk %}">
+    {% csrf_token %}
+    {{ join_form }}
+    <input type="submit" value="Join!">
+    </form>
+{% endif %}
+
+{% else %}
+<h1>No privilege.</h1>
+{% endif %}
+
+{% endblock content %}
