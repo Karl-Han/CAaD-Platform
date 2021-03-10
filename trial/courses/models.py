@@ -47,7 +47,7 @@ class CourseMember(models.Model):
     def get_course_privilege(cls, user_id, course_id):
         cm = cls.objects.filter(course__pk=course_id).filter(user__pk=user_id)
 
-        if len(cm):
+        if len(cm) > 0:
             # Probably multiple role, pick the highest privilege
             type = 3
             for role in cm:
@@ -58,7 +58,7 @@ class CourseMember(models.Model):
 
     @classmethod
     def is_teacher_of(cls, user_id, course_id):
-        return (cls.get_course_privilege(user_id, course_id) < 3)
+        return (cls.get_course_privilege(user_id, course_id) < 2)
     
     @classmethod
     def join_course_as_student(cls, user_id, course_id):
@@ -66,3 +66,17 @@ class CourseMember(models.Model):
         user = User.objects.get(pk=user_id)
         cm = cls(course=course, user=user, type=3)
         cm.save()
+
+    @classmethod
+    def update_member_privilege_staff(cls, user_id):
+        user = User.objects.get(pk=user_id)
+        cms = CourseMember.objects.filter(user__pk=user_id)
+        type = 4
+        for cm in cms:
+            if cm.type < type:
+                type = cm.type
+        if type > 2:
+            user.is_staff = False
+        else:
+            user.is_staff = True
+        user.save()

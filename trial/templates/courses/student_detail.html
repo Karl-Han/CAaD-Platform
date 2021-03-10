@@ -1,0 +1,36 @@
+{% extends "generics/base.html" %}
+
+{% block content %}
+
+<form action="{% url 'courses:change_privilege' member_record %}" method='post'>
+{% csrf_token %}
+{{ user_local.username }}
+{{ type_readable }}
+
+<input type="text" name="user_id" value="{{ user_local.pk }}" hidden>
+{% if privilege == 0 %}
+
+<label for="privilege">Choose a new privilege:</label>
+
+<select name="privilege" id="privilege_select" required>
+  <option value="" selected disabled hidden>Choose Privilege</option>
+  <option value="1">Teacher</option>
+  <option value="2">Assistant</option>
+  <option value="3">Student</option>
+</select> 
+
+{% else %}
+{# Privilege == 1 #}
+
+<select name="privilege" id="privilege_select" required>
+  <option value="" selected disabled hidden>Choose Privilege</option>
+  <option value="2">Assistant</option>
+  <option value="3">Student</option>
+</select> 
+
+{% endif %}
+<input type="submit" value="Submit new Privilege">
+
+</form>
+
+{% endblock content %}

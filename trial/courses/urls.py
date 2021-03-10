@@ -11,7 +11,8 @@ urlpatterns = [
     path('<int:course_id>/join', views.joinCourse, name='join'),
 
     # TODOs
-    # path('<int:course_id>/students', views.manageStudents, name='manage_students'),
+    path('<int:course_id>/students', views.StudentsListView.as_view(), name='manage_students'),
+    path('changePrivilege/<int:member_record>', views.ChangePrivilegeView.as_view(), name='change_privilege'),
     # path('<int:course_id>/task', views.manageTasks, name='manage_tasks'),
     # path('<int:course_id>/announcements', views.manageAnnounce, name='manage_announces'),
 ]
