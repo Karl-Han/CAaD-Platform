@@ -6,6 +6,7 @@ tags
 .vscode/
 !db.sqlite3
 *.sqlite3
+triallogs
 
 
 # Byte-compiled / optimized / DLL files
