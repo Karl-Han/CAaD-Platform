@@ -4,10 +4,10 @@ from . import views
 
 app_name = 'homeworks'
 urlpatterns = [
-    path('', views.index, name='index'),
-    path('doCreate', views.doCreate, name='docreate'),
-    path('commitments/<int:hsid>', views.getHomeworkStatu, name='getHomeworkStatu'),
-    path('commitments/<int:hsid>/score', views.scoreHomework, name='scoreHomework'),
-    path('<int:hid>', views.getHomework, name='getHomework'),
-    path('<int:hid>/commit', views.commitHomework, name='commitHomework')
+    path('<int:course_id>', views.TaskListView.as_view(), name='task_list'),
+    path('task/<int:task_id>', views.TaskDetailView.as_view(), name='task_detail'),
+    path('<int:course_id>/createTask', views.CreateTaskView.as_view(), name='create_task'),
+    # Tasks
+    path('task/<int:task_id>/submissions', views.SubmissionListView.as_view(), name='submission_list'),
+    path('submission/<int:submission_id>/comment', views.SubmissionCommentUpdateView.as_view(), name='submission_comment'),
 ]

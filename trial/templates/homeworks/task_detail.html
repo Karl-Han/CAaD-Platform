@@ -1,0 +1,47 @@
+{% extends 'generics/base.html' %}
+
+{% block content %}
+
+Title: {{ task.title }}
+Course: {{ task.course.name }}
+Descrition: {{ task.description }}
+Tips: {{ task.tips }}
+Status: {{ task.status }}
+Created Date: {{ task.create_date }}
+Close Date: {{ task.close_date }}
+
+<br>
+
+{% if submission %}
+Already got submission.
+Details:
+Status: {{ submission.status }}
+Commit Date: {{ submission.commit_date }}
+Score: {% if submission.score %}
+submission.score
+{% else %}
+<p style='color=red'>Not given yet.</p>
+{% endif %}
+
+Operations:
+<a href="{% url 'files:download' submission.file.pk %}" target="_blank">Download</a>
+<a href="{% url 'files:delete' submission.file.pk %}" target="_blank">Delete</a>
+Refresh the page after deletion.
+{% endif %}
+
+{% if to_submit %}
+Please upload your file.
+<form action="{% url 'homework:task_detail' task_id %}" method="post">
+
+<input type="submit" value="Submit">
+</form>
+
+{% endif %}
+
+{% if is_teacher %}
+
+<a href="{% url 'homeworks:submission_list' task_id %}"></a>
+
+{% endif %}
+
+{% endblock content %}

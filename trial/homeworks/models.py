@@ -1,36 +1,51 @@
 from django.db import models
+from django.utils import timezone
+from datetime import timedelta
+from django.contrib.auth.models import User
+
+
+from courses.models import Course
+from files.models import FileHomework
 
 # Create your models here.
-class Homework(models.Model):
+
+
+class Task(models.Model):
+    TASK_STATUS = [(0, 'draft'), (1, 'running'), (2, 'closed')]
+
     # main info
     title = models.CharField('title', max_length=64)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="tasks", null=True)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tasks_created", null=True)
     description = models.CharField('description', max_length=1024)
-    cid = models.IntegerField('course id')
-    ctrid = models.IntegerField('creater user id')
-    tips = models.CharField('tips', max_length=1024)
-    answer = models.CharField('answer', max_length=1024)
-    dockerAPI = models.CharField('dockerAPI', max_length=128)  # reserved
+    tips = models.CharField('tips', max_length=1024, blank=True)
+    answer = models.CharField('answer', max_length=1024, blank=True)
+    dockerAPI = models.CharField('dockerAPI', max_length=128, blank=True)
 
     # status info
-    #status = ( (0, 'draft'), (1, 'running'), (2, 'closed') )
-    status = models.IntegerField('homework status')
-    #types = ( (0, 'reserved') )
-    types = models.IntegerField('homework types')
-    create_date = models.DateTimeField('date created')
-    close_date = models.DateTimeField('date to close')
+    status = models.IntegerField(
+        'homework status', choices=TASK_STATUS, default=0)
+    create_date = models.DateTimeField('date created', default=timezone.now())
+    close_date = models.DateTimeField(
+        'date to close', default=timezone.now() + timedelta(days=30))
 
-class HomeworkStatu(models.Model):
-    cid = models.IntegerField('course id')  # not imp?
-    uid = models.IntegerField('user id')
-    hid = models.IntegerField('homework id')
 
-    #types = ( (0, 'uncomment'), (1, 'commented') )
-    types = models.IntegerField('homework types')
-    answer = models.CharField('answer', max_length=1024)
-    score = models.IntegerField('score')
-    comment = models.CharField('comment', max_length=1024)
+class Submission(models.Model):
+    SUBMISSION_STATUS = [ (0, "Unfinished"), (1, "Submitted"), (2, "Commented") ]
 
-    #status = ( (0, '(reserved)'), (1, 'undo&intime'), (2, 'done&intime'), (3, 'undo&timeout'), (4, 'done&timeout') )
-    status = models.IntegerField('status')
-    commit_date = models.DateTimeField('date committed')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="submissions", null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="submissions", null=True)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="submissions", null=True)
+    file = models.OneToOneField(FileHomework, on_delete=models.CASCADE, null=True)
 
+    status = models.IntegerField(
+        'status', default=0, choices=SUBMISSION_STATUS)
+    commit_date = models.DateTimeField('date committed', default=timezone.now())
+    # types = ( (0, 'uncomment'), (1, 'commented') )
+    # types = models.IntegerField('homework types')
+    # answer = models.CharField('answer', max_length=1024)
+    score = models.IntegerField('score', blank=True)
+    comment = models.CharField('comment', max_length=1024, blank=True)
+
+    def get_file_path(self):
+        return "#"

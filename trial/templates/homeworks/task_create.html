@@ -1,0 +1,10 @@
+{% extends 'generics/base.html' %}
+
+{% block content %}
+
+<form action="{% url 'homeworks:create_task' course_id %}" method="post">
+{% csrf_token %}
+{{ form }}
+<input type="submit" value="Submit">
+</form>
+{% endblock content %}
