@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 
 
 from courses.models import Course
-from files.models import FileHomework
+from files.models import SubmissionFile
 
 # Create your models here.
 
@@ -36,7 +36,7 @@ class Submission(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="submissions", null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="submissions", null=True)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="submissions", null=True)
-    file = models.OneToOneField(FileHomework, on_delete=models.CASCADE, null=True)
+    file = models.OneToOneField(SubmissionFile, on_delete=models.CASCADE, null=True, related_name="submission")
 
     status = models.IntegerField(
         'status', default=0, choices=SUBMISSION_STATUS)
