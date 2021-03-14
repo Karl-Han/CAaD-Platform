@@ -5,4 +5,5 @@ class HomeworksConfig(AppConfig):
     name = 'homeworks'
 
     def ready(self):
-        from .signals import updateHwStatus
+        pass
+        # from .signals import updateHwStatus

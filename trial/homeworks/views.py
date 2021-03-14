@@ -1,334 +1,181 @@
-from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse
+from django.shortcuts import render, get_object_or_404, redirect, reverse
+from django.http import HttpResponse, FileResponse
 from django.utils import timezone
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.views import View
+from django.views.generic import ListView, UpdateView
+from django.contrib import messages
 
-from users.models import User
 from courses.models import Course, CourseMember
-from homeworks.models import Homework, HomeworkStatu
+from .forms import TaskForm
+from .models import Task, Submission
+# HomeworkStatu is Submission now
+from files.forms import UploadFileForm
 
 import json
 import datetime
 
-from utils.check import info, checkReqData, checkUser
+from utils.check import info, checkReqData, checkUser, return_error
 from utils.status import *
-from .utils import getHs, getFh, getDk
+from .utils import SUBMISSION_STATUS
 
-# Create your views here.
-def index(request):
-    return HttpResponse("test")
+class TaskListView(ListView):
+    """
+    List all the tasks in the same course
+    """
+    paginate_by = 10
+    template_name = 'homeworks/task_list.html'
+    context_object_name = 'task_list'
 
-def doCreate(request):
-    if request.method != 'POST':
-        raise PermissionDenied
+    def get_queryset(self):
+        course_id = self.kwargs['course_id']
+        return Task.objects.filter(course__pk=course_id)
 
-    crd_st, rd = checkReqData(request, post=['cname', 'title', 'description', 'tips', 'answer', 'runsec'])  # TODO: docker
-    if crd_st == -1:
-        return rd
-    # check delta (>0)
-    if int(request.POST['runsec']) <= 0:
-        return info(request, INFO_HACKER)
+    def get_context_data(self, *args, object_list=None, **kwargs):
+        context = super().get_context_data(*args, object_list=object_list, **kwargs)
+        context['course_id'] = self.kwargs['course_id']
+        return context
 
-    cu_st, tmp = checkUser(request)
-    if not cu_st == 1:
-        return tmp
-    creator = tmp
+    def get(self, request, course_id):
+        if not request.user.is_authenticated or not CourseMember.is_teacher_of(request.user.pk, course_id):
+            return return_error(request, NOT_AUTHENTICATED)
 
-    # check course
-    c = Course.objects.filter(name=request.POST['cname'])
-    if not c.exists():
-        return info(request, INFO_NOT_EXIST, INFO_STR[INFO_NOT_EXIST]%'[Hacker?] Course')
-    c = c[0]
+        # Authorized user
+        return super(TaskListView, self).get(self, request)
 
-    # check privilege
-    try:
-        cm = CourseMember.objects.get(uid=creator.pk, cid=c.pk)
-    except:
-        return info(request, INFO_HACKER)
-    if cm.types >= 3:  # student
-        raise PermissionDenied
+    
 
-    # check same homework ?
-    homework = Homework.objects.filter(cid=c.pk)
-    for h in homework:
-        if h.title == request.POST['title']:
-            return info(request, INFO_SAME, INFO_STR[INFO_SAME]%('Homework', 'name in this course'))
+class CreateTaskView(View):
+    def get(self, request, course_id):
+        form = TaskForm()
+        return render(request, "homeworks/task_create.html", {"form": form, 'course_id': course_id})
+        
+    def post(self, request, course_id):
+        if not request.user.is_authenticated or not CourseMember.is_teacher_of(course_id, request.user.pk):
+            return return_error(request, NOT_AUTHENTICATED)
 
-    # create
-    data = {
-        'title': request.POST['title'],
-        'description': request.POST['description'],
-        'cid': c.pk,
-        'ctrid': creator.pk,
-        'tips': request.POST['tips'],
-        'answer': request.POST['answer'],
-        'dockerAPI': 'TODO',
-        'status': SH_RUNNING,
-        'types': 0,  # TODO
-        'create_date': timezone.now(),
-        'close_date': timezone.now()+datetime.timedelta(seconds=int(request.POST['runsec']))
-    }
-    #return render(request, 'info.html', {'info': json.dumps(data, indent=4, sort_keys=True, default=str)})  # debug
+        # Authorized as teacher
+        form = TaskForm(request.POST)
+        if form.is_valid():
+            # Submitted fields: title, description, tips, close_date, answer
+            task = form.save()
+            task.course = get_object_or_404(Course, pk=course_id)
+            task.creator = request.user
+            task.save()
+            messages.info(request, "Create Task successfully")
+            return redirect(reverse("homeworks:task_list", args=[course_id]))
+            
+        return render(request, "homeworks/task_create.html", {"form": form, 'course_id': course_id})
 
-    try:
-        h = Homework(
-            title = data['title'],
-            description = data['description'],
-            cid = data['cid'],
-            ctrid = data['ctrid'],
-            tips = data['tips'],
-            answer = data['answer'],
-            dockerAPI = data['dockerAPI'],
-            status = data['status'],
-            types = data['types'],
-            create_date = data['create_date'],
-            close_date = data['close_date']
-        )
-        h.save()
-    except:
-        return info(request, INFO_DB_ERR)
+class TaskDetailView(View):
+    """
+    Display the detail of specific task
 
-    return info(request, SUCCESS)
+    Privilege: more than student
+    
+    For students of the task:
+        * Display details of the task
+        * Upload, delete the commited file
+    For non-students:
+        * Display details of the task
+        * Redirect to submissions of the task
+    """
+    template_name = "homeworks/task_detail.html"
 
-def getHomework(request, hid):
-    # get h u c cm
-    h = get_object_or_404(Homework, pk=hid)
-    try:
-        c = Course.objects.get(pk=h.cid)
-        ctr = User.objects.get(pk=h.ctrid)
-    except:
-        return info(request, INFO_DB_ERR)
+    def get(self, request, task_id):
+        task = get_object_or_404(Task, pk=task_id)
+        if request.user.is_authenticated and CourseMember.is_member_of(request.user.pk, task.course.pk):
+            # User is member
+            privilege = CourseMember.get_highest_course_privilege(request.user.pk, task.course.pk)
+            context = {}
+            context['task'] = task
+            if privilege == 3:
+                # One and only one
+                try:
+                    submission = Submission.objects.get(task__pk=task_id, user__pk=request.user.pk)
+                    context['submission'] = submission
+                except Submission.DoesNotExist:
+                    # submission = None
+                    context['to_submit'] = True
+                    context['task_id'] = task_id
+                    context['form'] = UploadFileForm()
+                    pass
+                except:
+                    # More than one copy
+                    messages.error("More than one copy for {} in {}".format(request.user.pk, task_id))
+            else:
+                # link to submission list
+                context["is_teacher"] = True
+                context['task_id'] = task_id
+            return render(request, self.template_name, context=context)
+        return return_error(request, NOT_AUTHENTICATED)
 
-    cu_st, tmp = checkUser(request)
-    if not cu_st == 1:
-        return tmp
-    user = tmp
+    def post(self, request, task_id):
+        task = get_object_or_404(Task, pk=task_id)
+        if request.user.is_authenticated and CourseMember.is_student_of(request.user.pk, task.course.pk):
+            try:
+                submission = Submission.objects.get(task__pk=task_id, user__pk=request.user.pk)
+            except Submission.DoesNotExist:
+                # Normal case
+                form = UploadFileForm(request.POST, request.FILES)
+                file = form.save()
+                submission = Submission(course=task.course, user=request.user, task=task, file=file)
+                submission.save()
+            except:
+                # More than one copy
+                messages.error("More than one copy for {} in {}".format(request.user.pk, task_id))
+                return redirect(reverse("task_detail", args=[task_id]))
+        return redirect(reverse("homeworks:task_detail", args=[task_id]))
 
-    # check privilege
-    try:
-        cm = CourseMember.objects.get(cid=c.pk, uid=user.pk)
-    except:
-        raise PermissionDenied
+class SubmissionListView(ListView):
+    paginate_by = 10
+    template_name = 'homeworks/submission_list.html'
+    context_object_name = 'submission_list'
 
-    ans = 'Display after closed!'
-    if h.status == SH_CLOSED:
-        ans = h.answer
-    hw = {
-        'id': h.pk,
-        'title': h.title,
-        'description': h.description,
-        'cname': c.name,
-        'ctrname': ctr.nickname,
-        'tips': h.tips,
-        'answer': ans,
-        'dockerAPI': 'TODO',
-        'status': h.status,
-        'types': 'TODO',
-        'cr_date': str(h.create_date),
-        'cl_date': str(h.close_date)
-    }
+    def get_queryset(self):
+        user = self.request.user
+        task_id = self.kwargs['task_id']
+        return Submission.objects.filter(task__pk=task_id)
 
-    try:
-        hs = getHs(h.pk)
-        fh = getFh(h.pk)
-        dk = getDk(h.pk)
-    except:
-        return info(request, INFO_DB_ERR)
+    def get_context_data(self, *args, object_list=None, **kwargs):
+        context = super().get_context_data(*args, object_list=object_list, **kwargs)
+        context['task_id'] = self.kwargs['task_id']
+        return context
 
-    data = {
-        'hw': hw,
-        'hSt': hs,
-        'fhs': fh,
-        'dk': dk
-    }
+    def get(self, request, task_id):
+        task = get_object_or_404(Task, pk=task_id)
+        if not request.user.is_authenticated or not CourseMember.is_teacher_of(request.user.pk, task.course.pk):
+            return return_error(request, NOT_AUTHENTICATED)
 
-    # return
-    if request.method == 'GET':
-        if cm.types<3:
-            return render(request, 'homework/homeworkM.html', data)
-        else:
-            hs = HomeworkStatu.objects.filter(uid=user.pk)
-            if hs.exists():
-                hs = hs[0]  # only one
-                data['hs'] = {
-                    'answer': hs.answer,
-                    'types': hs.types,
-                    'score': hs.score,
-                    'comment': hs.comment,
-                    'status': hs.status
-                }
-            return render(request, 'homework/homeworkS.html', data)
-    elif request.method == 'POST':
-        # TODO: check M/S?
-        return info(request, 0, 'TODO')
-        return render(request, 'info.html', {'info': json.dumps(data)})
-    else:
-        raise PermissionDenied
+        # Authorized user
+        return super(SubmissionListView, self).get(self, request)
 
-def commitHomework(request, hid):
-    if request.method != 'POST':
-        raise PermissionDenied
+class SubmissionCommentUpdateView(UpdateView):
+    model = Submission
+    fields = ["status", "score", "comment"]
+    success_url = "/"
+    template_name = "homeworks/submission_update.html"
 
-    crd_st, rd = checkReqData(request, post=['answer'])
-    if crd_st == -1:
-        return rd
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        submission_id = self.object.pk
+        # download_link = self.object.get_download_url()
+        file_id = self.object.file.pk
 
-    cu_st, tmp = checkUser(request)
-    if not cu_st == 1:
-        return tmp
-    user = tmp
+        context['submission_id'] = submission_id
+        # context['file_download_url'] = download_link
+        context['file_id'] = file_id
+        return context
 
-    # check homework and course
-    h = Homework.objects.filter(pk=hid)
-    if not h.exists():
-        return info(request, INFO_NOT_EXIST, INFO_STR[INFO_NOT_EXIST]%'[Hacker?] Homework')
-    h = h[0]
+    def clean_score(self):
+        score = self.cleaned_data['score']
+        if score > 100 or score < 0:
+            raise ValidationError("Invalid score for submission")
+        return score
 
-    try:
-        c = Course.objects.get(pk=h.cid)
-    except:
-        return info(request, INFO_DB_ERR)
+    def form_valid(self, form):
+        self.success_url = reverse("submission_list", args=[self.object.task.pk])
+        return super().form_valid(form)
 
-    # check privilege
-    try:
-        cm = CourseMember.objects.get(uid=user.pk, cid=c.pk)
-    except:
-        return info(request, INFO_DB_ERR)
-    if cm.types != 3:  # not student?
-        return info(request, INFO_HACKER)
-
-    # check committed
-    hs = HomeworkStatu.objects.filter(cid=c.pk, uid=user.pk, hid=h.pk)
-    if hs.exists():
-        hs = hs[0]
-        hs.answer = request.POST['answer']
-        hs.status = 2*h.status
-        try:
-            hs.save()
-        except:
-            return info(request, INFO_HACKER)
-    else:
-        data = {
-            'cid': c.pk,
-            'uid': user.pk,
-            'hid': h.pk,
-            'types': 0,
-            'answer': request.POST['answer'],
-            'score': -1,  # default
-            'comment': '',  # default
-            'status': 2*h.status,
-            'commit_date': timezone.now()
-        }
-        #return render(request, 'info.html', {'info': json.dumps(data, indent=4, sort_keys=True, default=str)})  # debug
-
-        try:
-            hs = HomeworkStatu(
-                cid = data['cid'],
-                uid = data['uid'],
-                hid = data['hid'],
-                types = data['types'],
-                answer = data['answer'],
-                score = data['score'],
-                comment = data['comment'],
-                status = data['status'],
-                commit_date = data['commit_date']
-            )
-            hs.save()
-        except:
-            return info(request, INFO_HACKER)
-
-    return info(request, SUCCESS)
-
-def getHomeworkStatu(request, hsid):
-    hs = get_object_or_404(HomeworkStatu, pk=hsid)
-    try:
-        c = Course.objects.get(pk=hs.cid)
-    except:
-        return info(request, INFO_DB_ERR)
-
-    cu_st, tmp = checkUser(request)
-    if not cu_st == 1:
-        return tmp
-    user = tmp
-
-    # check privilege
-    try:
-        cm = CourseMember.objects.get(cid=c.pk, uid=user.pk)
-    except:
-        raise PermissionDenied
-
-    hwSt = {
-        'id': hs.pk,
-        'cname': c.name,
-        'answer': hs.answer,
-        'types': hs.types,
-        'status': hs.status,
-        'cm_date': str(hs.commit_date)
-    }
-    if hs.types == 1:
-        hwSt['score'] = hs.score
-        hwSt['comment'] = hs.comment
-
-    data = {
-        'hs': hwSt
-    }
-
-    # return
-    if request.method == 'GET':
-        if cm.types<3:
-            return render(request, 'homeworkStatus/hsM.html', data)
-        if hs.uid == user.pk:
-            return render(request, 'homeworkStatus/hsS.html', data)
-        raise PermissionDenied
-    elif request.method == 'POST':
-        return info(request, 0, 'POST')
-        # TODO: check M/S?
-        return info(request, 0, 'TODO')
-    else:
-        raise PermissionDenied
-
-def scoreHomework(request, hsid):
-    if request.method != 'POST':
-        raise PermissionDenied
-
-    # get hs u c cm
-    hs = HomeworkStatu.objects.filter(pk=hsid)
-    if not hs.exists():
-        return info(request, INFO_HACKER)
-    hs = hs[0]
-
-    crd_st, rd = checkReqData(request, post=['score', 'comment'])
-    if crd_st == -1:
-        return rd
-    # check score (>0)
-    if int(request.POST['score'])<0 or int(request.POST['score'])>100:
-        return info(request, INFO_HACKER)
-
-    cu_st, tmp = checkUser(request)
-    if not cu_st == 1:
-        return tmp
-    user = tmp
-
-    try:
-        c = Course.objects.get(pk=hs.cid)
-    except:
-        return info(request, INFO_DB_ERR)
-
-    cm = CourseMember.objects.filter(cid=c.pk, uid=user.pk)
-    if not cm.exists():
-        return info(request, INFO_HACKER)
-    cm = cm[0]
-
-    # check privilege
-    if cm.types >= 3:
-        return info(request, INFO_HACKER)
-
-    try:
-        hs.score = int(request.POST['score'])
-        hs.comment = request.POST['comment']
-        hs.types = 1
-        hs.save()
-    except:
-        return info(request, INFO_DB_ERR)
-
-    return info(request, SUCCESS)
+    def get(self, request, *args, **kwargs):
+        return super(SubmissionCommentUpdateView, self).get(self, request, *args, **kwargs)

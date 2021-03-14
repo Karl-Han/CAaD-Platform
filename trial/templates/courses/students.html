@@ -18,7 +18,15 @@
 <td hidden="True">{{ member_record.pk }}</td>
 <td>{{ member_record.course }}</td>
 <td>{{ member_record.user }}</td>
-<td>{{ member_record.type }}</td>
+<td>
+{% if member_record.type == 1 %}
+Teacher
+{% elif member_record.type == 2 %}
+Assistant
+{% elif member_record.type == 3 %}
+Student
+{% endif %} 
+</td>
 <td><a href="{% url 'courses:change_privilege' member_record.pk %}">Change privilege</a></td>
 </tr>
 

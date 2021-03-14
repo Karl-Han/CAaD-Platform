@@ -1,3 +1,9 @@
+NOT_AUTHENTICATED = 0
+
+ERROR_LIST = {
+    NOT_AUTHENTICATED: "User not authenticated for this site.",
+}
+
 SUCCESS = 1
 FAIL = 2
 WA_PWD = 3

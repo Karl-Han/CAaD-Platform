@@ -44,7 +44,10 @@ class CourseMember(models.Model):
         choices=MEMBER_TYPE, verbose_name='Member type')
     
     @classmethod
-    def get_course_privilege(cls, user_id, course_id):
+    def get_highest_course_privilege(cls, user_id, course_id):
+        if user_id == None or course_id == None:
+            return 4
+
         cm = cls.objects.filter(course__pk=course_id).filter(user__pk=user_id)
 
         if len(cm) > 0:
@@ -58,7 +61,20 @@ class CourseMember(models.Model):
 
     @classmethod
     def is_teacher_of(cls, user_id, course_id):
-        return (cls.get_course_privilege(user_id, course_id) < 2)
+        return (cls.get_highest_course_privilege(user_id, course_id) < 2)
+
+    @classmethod
+    def is_student_of(cls, user_id, course_id):
+        cm = cls.objects.filter(course__pk=course_id).filter(user__pk=user_id)
+
+        for role in cm:
+            if role.type == 3:
+                return True
+        return False
+
+    @classmethod
+    def is_member_of(cls, user_id, course_id):
+        return (cls.get_highest_course_privilege(user_id, course_id) < 4)
     
     @classmethod
     def join_course_as_student(cls, user_id, course_id):

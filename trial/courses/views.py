@@ -4,9 +4,8 @@ from django.views.generic import View, ListView, DetailView, UpdateView
 
 from users.models import User
 from .models import Course, CourseMember
-from homeworks.models import Homework, HomeworkStatu
 from .forms import CreateCourseForm, JoinForm
-import courses.utils as utils
+from courses.utils import *
 
 from .utils import getRandCPwd
 
@@ -42,7 +41,7 @@ class CreatecourseView(View):
         cm = CourseMember(
             course = obj, 
             user = user,
-            type = utils.COURSEMEMBER_ADMIN
+            type = COURSEMEMBER_ADMIN
         )
         cm.save()
 
@@ -61,7 +60,7 @@ def homepage(request, course_id):
     # 1. Open to everyone or member -> basic info
     # 2. Is teacher -> to member management
     # Stage 1
-    privilege = CourseMember.get_course_privilege(user.pk, course.pk)
+    privilege = CourseMember.get_highest_course_privilege(user.pk, course.pk)
     print(privilege)
     if course.is_open or privilege != 4:
         context['course'] = course
@@ -70,7 +69,7 @@ def homepage(request, course_id):
             form = JoinForm()
             context['join_form'] = form
         else:
-            context['role'] = utils.COURSEMEMBER_TYPE[privilege]
+            context['role'] = COURSEMEMBER_TYPE[privilege]
             context['is_member'] = True
     
     # Stage 2
@@ -84,18 +83,19 @@ class EditcourseView(UpdateView):
     model = Course
     fields = ['name', 'password', 'description', 'is_open']
     success_url = "/"
+    template_name = "courses/course_form.html"
 
     def form_valid(self, form):
         clean = form.cleaned_data
         if clean['password'] == '':
             self.object.password = getRandCPwd()
             self.object.save()
-        self.success_url = reverse("courses:homepage", args=[self.object.pk])
+        self.success_url = reverse("courses:course_homepage", args=[self.object.pk])
         return super().form_valid(form)
 
 def joinCourse(request, course_id):
     if request.method != "POST":
-        return redirect(reverse("courses:homepage", args=[course_id]))
+        return redirect(reverse("courses:course_homepage", args=[course_id]))
 
     if not request.user.is_authenticated:
         return render(request, "info.html", {"info": "Not authenticated yet."})
@@ -117,17 +117,16 @@ class StudentsListView(ListView):
     def get_queryset(self):
         user = self.request.user
         course_id = self.kwargs['course_id']
-        privilege = CourseMember.get_course_privilege(user.pk, course_id)
+        privilege = CourseMember.get_highest_course_privilege(user.pk, course_id)
         return CourseMember.objects.filter(course__id=course_id, type__gt=privilege)
 
     def get_context_data(self, *args, object_list=None, **kwargs):
         context = super().get_context_data(*args, object_list=object_list, **kwargs)
         context['course_id'] = self.kwargs['course_id']
-
         return context
 
     def get(self, request, course_id):
-        if not request.user.is_authenticated or CourseMember.get_course_privilege(request.user.pk, course_id):
+        if not request.user.is_authenticated or not CourseMember.is_teacher_of(request.user.pk, course_id):
             return render(request, "courses/info.html", {"info": "User not authenticated."})
 
         # Authorized user
@@ -144,10 +143,10 @@ class ChangePrivilegeView(View):
         context = {}
         context['user_local'] = cm.user
         context['type'] = cm.type
-        context['type_readable'] = utils.COURSEMEMBER_TYPE[cm.type]
+        context['type_readable'] = COURSEMEMBER_TYPE[cm.type]
         context['course_id'] = course.pk
         context['member_record'] = member_record 
-        context['privilege'] = CourseMember.get_course_privilege(request.user.pk, course.pk)
+        context['privilege'] = CourseMember.get_highest_course_privilege(request.user.pk, course.pk)
         return render(request, "courses/student_detail.html", context)
 
     def post(self, request, member_record):
@@ -161,5 +160,5 @@ class ChangePrivilegeView(View):
             cm.type = request.POST['privilege']
             CourseMember.update_member_privilege_staff(cm.user.pk)
             cm.save()
-            return redirect(reverse("courses:manage_students", args=[course.pk]))
+            return redirect(reverse("courses:students_manage", args=[course.pk]))
         return render(request, "courses/info.html", {"info": "User not authenticated."})
