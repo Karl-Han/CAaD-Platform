@@ -7,17 +7,17 @@ from .models import SubmissionFile
 class SubmissionFileAdmin(admin.ModelAdmin):
     actions_on_top = True
     actions_on_bottom = True
-    list_display = ("pk", "file_name", "file", "create_date", "file_hash")
+    list_display = ("pk", "name", "file", "create_date", "hash")
 
     fieldsets = (
         ("Main information", {
             "fields": (
-                'file_name', 'file'
+                'name', 'file'
             ),
         }),
         ("Extra information", {
             "fields": (
-                "create_date", "file_hash"
+                "create_date", "hash"
             )
         }),
     )

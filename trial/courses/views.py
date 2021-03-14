@@ -90,12 +90,12 @@ class EditcourseView(UpdateView):
         if clean['password'] == '':
             self.object.password = getRandCPwd()
             self.object.save()
-        self.success_url = reverse("courses:homepage", args=[self.object.pk])
+        self.success_url = reverse("courses:course_homepage", args=[self.object.pk])
         return super().form_valid(form)
 
 def joinCourse(request, course_id):
     if request.method != "POST":
-        return redirect(reverse("courses:homepage", args=[course_id]))
+        return redirect(reverse("courses:course_homepage", args=[course_id]))
 
     if not request.user.is_authenticated:
         return render(request, "info.html", {"info": "Not authenticated yet."})
@@ -160,5 +160,5 @@ class ChangePrivilegeView(View):
             cm.type = request.POST['privilege']
             CourseMember.update_member_privilege_staff(cm.user.pk)
             cm.save()
-            return redirect(reverse("courses:manage_students", args=[course.pk]))
+            return redirect(reverse("courses:students_manage", args=[course.pk]))
         return render(request, "courses/info.html", {"info": "User not authenticated."})

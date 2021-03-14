@@ -6,12 +6,11 @@ from django.views import View
 from django.views.generic import ListView, UpdateView
 from django.contrib import messages
 
-from users.models import User
 from courses.models import Course, CourseMember
 from .forms import TaskForm
 from .models import Task, Submission
 # HomeworkStatu is Submission now
-# from homeworks.models import Homework, HomeworkStatu
+from files.forms import UploadFileForm
 
 import json
 import datetime
@@ -21,6 +20,9 @@ from utils.status import *
 from .utils import SUBMISSION_STATUS
 
 class TaskListView(ListView):
+    """
+    List all the tasks in the same course
+    """
     paginate_by = 10
     template_name = 'homeworks/task_list.html'
     context_object_name = 'task_list'
@@ -65,14 +67,26 @@ class CreateTaskView(View):
             
         return render(request, "homeworks/task_create.html", {"form": form, 'course_id': course_id})
 
-# For student: modify submission
-# For > student: read submission
 class TaskDetailView(View):
+    """
+    Display the detail of specific task
+
+    Privilege: more than student
+    
+    For students of the task:
+        * Display details of the task
+        * Upload, delete the commited file
+    For non-students:
+        * Display details of the task
+        * Redirect to submissions of the task
+    """
+    template_name = "homeworks/task_detail.html"
+
     def get(self, request, task_id):
         task = get_object_or_404(Task, pk=task_id)
         if request.user.is_authenticated and CourseMember.is_member_of(request.user.pk, task.course.pk):
             # User is member
-            privilege = CourseMember.get_course_privilege(request.user.pk, task.course.pk)
+            privilege = CourseMember.get_highest_course_privilege(request.user.pk, task.course.pk)
             context = {}
             context['task'] = task
             if privilege == 3:
@@ -93,9 +107,9 @@ class TaskDetailView(View):
                 # link to submission list
                 context["is_teacher"] = True
                 context['task_id'] = task_id
-
-            return render(request, "homeworks/task_detail.html", context=context)
+            return render(request, self.template_name, context=context)
         return return_error(request, NOT_AUTHENTICATED)
+
     def post(self, request, task_id):
         task = get_object_or_404(Task, pk=task_id)
         if request.user.is_authenticated and CourseMember.is_student_of(request.user.pk, task.course.pk):
@@ -111,7 +125,7 @@ class TaskDetailView(View):
                 # More than one copy
                 messages.error("More than one copy for {} in {}".format(request.user.pk, task_id))
                 return redirect(reverse("task_detail", args=[task_id]))
-        return redirect(reverse("task_detail", args=[task_id]))
+        return redirect(reverse("homeworks:task_detail", args=[task_id]))
 
 class SubmissionListView(ListView):
     paginate_by = 10
@@ -129,7 +143,7 @@ class SubmissionListView(ListView):
         return context
 
     def get(self, request, task_id):
-        task = get_object_or_404(Task, task_id)
+        task = get_object_or_404(Task, pk=task_id)
         if not request.user.is_authenticated or not CourseMember.is_teacher_of(request.user.pk, task.course.pk):
             return return_error(request, NOT_AUTHENTICATED)
 
@@ -140,7 +154,18 @@ class SubmissionCommentUpdateView(UpdateView):
     model = Submission
     fields = ["status", "score", "comment"]
     success_url = "/"
-    template_name = "submission_update.html"
+    template_name = "homeworks/submission_update.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        submission_id = self.object.pk
+        # download_link = self.object.get_download_url()
+        file_id = self.object.file.pk
+
+        context['submission_id'] = submission_id
+        # context['file_download_url'] = download_link
+        context['file_id'] = file_id
+        return context
 
     def clean_score(self):
         score = self.cleaned_data['score']

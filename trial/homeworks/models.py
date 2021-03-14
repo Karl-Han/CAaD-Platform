@@ -2,13 +2,11 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth.models import User
+from django.http import FileResponse
 
 
 from courses.models import Course
 from files.models import SubmissionFile
-
-# Create your models here.
-
 
 class Task(models.Model):
     TASK_STATUS = [(0, 'draft'), (1, 'running'), (2, 'closed')]
@@ -20,7 +18,7 @@ class Task(models.Model):
     description = models.CharField('description', max_length=1024)
     tips = models.CharField('tips', max_length=1024, blank=True)
     answer = models.CharField('answer', max_length=1024, blank=True)
-    dockerAPI = models.CharField('dockerAPI', max_length=128, blank=True)
+    docker_api = models.CharField('dockerAPI', max_length=128, blank=True)
 
     # status info
     status = models.IntegerField(
@@ -44,8 +42,11 @@ class Submission(models.Model):
     # types = ( (0, 'uncomment'), (1, 'commented') )
     # types = models.IntegerField('homework types')
     # answer = models.CharField('answer', max_length=1024)
-    score = models.IntegerField('score', blank=True)
-    comment = models.CharField('comment', max_length=1024, blank=True)
+    score = models.IntegerField('score', null=True)
+    comment = models.CharField('comment', max_length=1024, null=True)
 
-    def get_file_path(self):
-        return "#"
+    def get_file_response(self):
+        path = self.file.get_local_path()
+        response = FileResponse(open(path, "rb"), filename=self.file.name)
+        print(path)
+        return response

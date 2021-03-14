@@ -7,7 +7,6 @@ urlpatterns = [
     path('<int:course_id>', views.TaskListView.as_view(), name='task_list'),
     path('task/<int:task_id>', views.TaskDetailView.as_view(), name='task_detail'),
     path('<int:course_id>/createTask', views.CreateTaskView.as_view(), name='create_task'),
-    # Tasks
     path('task/<int:task_id>/submissions', views.SubmissionListView.as_view(), name='submission_list'),
-    path('submission/<int:submission_id>/comment', views.SubmissionCommentUpdateView.as_view(), name='submission_comment'),
+    path('submission/<int:pk>/comment', views.SubmissionCommentUpdateView.as_view(), name='submission_comment'),
 ]

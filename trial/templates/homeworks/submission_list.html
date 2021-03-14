@@ -1,0 +1,28 @@
+{% extends 'generics/base.html' %}
+
+{% block content %}
+
+<table>
+<tr>
+<th>User</th>
+<th>Status</th>
+<th>Commit Date</th>
+<th>Score</th>
+<th>Comment</th>
+</tr>
+
+<tr>
+{% for submission in submission_list %}
+
+<td>{{ submission.user.username }}</td>
+<td>{{ submission.status }}</td>
+<td>{{ submission.commit_date }}</td>
+<td>{{ submission.score }}</td>
+<td>{{ submission.comment }}</td>
+
+{% endfor %}
+</tr>
+
+</table>
+
+{% endblock content %}
