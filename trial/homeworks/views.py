@@ -182,3 +182,20 @@ class SubmissionCommentUpdateView(UpdateView):
 
     def get(self, request, *args, **kwargs):
         return super(SubmissionCommentUpdateView, self).get(self, request, *args, **kwargs)
+
+class TaskUpdateView(UpdateView):
+    model = Task
+    fields = ["title", "description", "tips", "answer", "status", "close_date"]
+    # To be change
+    success_url = "/"
+    template_name = "homeworks/task_update.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['task_id'] = self.object.pk
+
+        return context
+
+    def form_valid(self, form):
+        self.success_url = reverse("courses:task_detail", args=[self.object.pk])
+        return super().form_valid(form)

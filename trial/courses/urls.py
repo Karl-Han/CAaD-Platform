@@ -5,18 +5,22 @@ import homeworks.views as homework_views
 
 app_name = 'courses'
 urlpatterns = [
+    # Basic operation
     path('', views.IndexListView.as_view(), name='course_list'),
     path('create', views.CreatecourseView.as_view(), name='course_create'),
     path('<int:course_id>', views.homepage, name='course_homepage'),
     path('<int:pk>/edit', views.EditcourseView.as_view(), name='course_edit'),
     path('<int:course_id>/join', views.joinCourse, name='course_join'),
 
+    # Member management
     path('<int:course_id>/students', views.StudentsListView.as_view(), name='students_manage'),
     path('changePrivilege/<int:member_record>', views.ChangePrivilegeView.as_view(), name='privilege_change'),
 
+    # Task handling 
     path('<int:course_id>/tasks', homework_views.TaskListView.as_view(), name='task_list'),
     path('<int:course_id>/createTask', homework_views.CreateTaskView.as_view(), name='task_create'),
     path('task/<int:task_id>', homework_views.TaskDetailView.as_view(), name='task_detail'),
+    path('task/<int:pk>/update', homework_views.TaskUpdateView.as_view(), name='task_update'),
     path('task/<int:task_id>/submissions', homework_views.SubmissionListView.as_view(), name='submission_list'),
     path('submission/<int:pk>/comment', homework_views.SubmissionCommentUpdateView.as_view(), name='submission_comment'),
 

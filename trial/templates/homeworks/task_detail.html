@@ -42,7 +42,7 @@ Please upload your file.
 {% endif %}
 
 {% if is_teacher %}
-
+<a href="{% url 'courses:task_update' task_id %}">Update Task</a>
 <a href="{% url 'courses:submission_list' task_id %}">Submission List</a>
 
 {% endif %}
