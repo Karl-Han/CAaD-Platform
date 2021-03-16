@@ -9,7 +9,7 @@ class CreateCourseForm(forms.ModelForm):
     def clean_password(self):
         p = self.cleaned_data['password']
         if p == '':
-            messages.warning(self.request, "Adding random course password.")
+            # messages.warning(self.request, "Adding random course password.")
             return getRandCPwd()
         return p
 
@@ -33,4 +33,5 @@ class CreateCourseForm(forms.ModelForm):
         return course
     
 class JoinForm(forms.Form):
+    id = forms.IntegerField(max_value=65525)
     password = forms.CharField(max_length=8)

@@ -17,7 +17,7 @@
     <body>
     <div class="container logo">
     {# hard coded image, in the `trial/trial/static` #}
-    <img src="{% static 'trial/static/logo.png' %}" alt="LOGO">
+    <a href="{% url 'home' %}"><img src="{% static 'trial/static/logo.png' %}" alt="LOGO"></a>
     </div>
     <div class="container subject">
     {% block subject %}
@@ -34,9 +34,13 @@
     {% block status %}
     
     {% if user.is_authenticated %}
-    Hello {{ user.username }}
+    Hello 
+    <a href="{% url 'users:profile' user.username %}">
+    {{ user.username }}
+    </a>
+    . <a href="{% url 'users:logout_view' %}">Logout</a>
     {% else %}
-    Anonymous User
+    Anonymous User. <a href="{% url 'users:login' %}">Login</a>
     {% endif %}
     {% endblock status %}
     </div>

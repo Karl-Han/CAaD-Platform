@@ -21,7 +21,7 @@
   <h2>My Courses:</h2>
   <ul>
     {% for course_info in course_info_list %}
-    <li><a href="">{{ course_info.name }}({{ course_info.role }})</a></li>
+    <li><a href="{% url 'courses:course_homepage' course_info.id %}">{{ course_info.name }}({{ course_info.role }})</a></li>
     {% endfor %}
   </ul>
 {% endif %}

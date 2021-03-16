@@ -8,25 +8,28 @@
 
 <h2>Welcome, {{ user.username }} as {{ role }}</h2>
 {# Basic information #}
-<h5>课程名:{{ course.name }}</h5>
-<h5>创建人:{{ course.creator.username }}</h5>
-<h5>课程描述:{{ course.description }}</h5>
+<p>Course ID: {{ course.pk }}</p>
+<p>Course name:{{ course.name }}</p>
+<p>Creator:{{ course.creator.username }}</p>
+<p>Descrition:{{ course.description }}</p>
+<p><a href="{% url 'courses:task_list' course.pk %}">Task list</a></p>
 
 {% if is_teacher %}
-    <h5>加课密码:<p id="pwd">{{ course.password }}</p></h5>
-    <h5>
-    是否为公开课程: 
+    <p>Course password: {{ course.password }}</p>
+    <p>
+    Open course?: 
         {% if course.is_open %}
-        是
+        Yes
         {% else %}
-        否
+        No. Student can only join with Course ID and course password.
         {% endif %}
-    </h5>
+    </p>
+    <p><a href="{% url 'courses:course_edit' course.pk %}">Edit course information</a></p>
 {% endif %}
 
 {% if is_member %}
 {% else %}
-    <form method="post" action="{% url 'courses:join' course.pk %}">
+    <form method="post" action="{% url 'courses:course_join' course.pk %}">
     {% csrf_token %}
     {{ join_form }}
     <input type="submit" value="Join!">
@@ -34,7 +37,7 @@
 {% endif %}
 
 {% else %}
-<h1>No privilege.</h1>
+<p>No privilege. Try to login or join course with course password.</p>
 {% endif %}
 
 {% endblock content %}

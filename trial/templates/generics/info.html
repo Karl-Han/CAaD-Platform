@@ -1,0 +1,15 @@
+{% extends 'generics/base.html' %}
+
+{% block content %}
+
+{{ msg }}
+
+{% if redirect_to %}
+<a href="{{ redirect_to }}">Click here to jump.</a>
+{% endif %}
+
+{% if previous != None %}
+<a href="{{ previous }}">Go back to previous page.</a>
+{% endif %}
+
+{% endblock content %}

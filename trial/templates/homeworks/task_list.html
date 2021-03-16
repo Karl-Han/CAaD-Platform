@@ -2,6 +2,8 @@
 
 {% block content %}
 
+<a href="{% url 'courses:task_create' course_id %}">Create New Task</a>
+
 <table>
 
 <tr>
@@ -16,7 +18,13 @@
 
 <tr>
 <td hidden="True">{{ task.pk }}</td>
-<td>{{ task.title }}</td>
+
+<td>
+<a href="{% url 'courses:task_detail' task.pk %}">
+{{ task.title }}
+</a>
+</td>
+
 <td>{{ task.creator.username }}</td>
 <td>
 {% if task.status == 0 %}

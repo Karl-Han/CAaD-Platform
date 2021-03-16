@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<form action="{% url 'homeworks:submission_comment' submission_id %}" method="post">
+<form action="{% url 'courses:submission_comment' submission_id %}" method="post">
 {% csrf_token %}
 {{ form.as_p }}
 <p><a href="{% url 'files:download' file_id %}" _target="blank">Download</a></p>

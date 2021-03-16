@@ -33,7 +33,7 @@ Refresh the page after deletion.
 
 {% if to_submit %}
 Please upload your file.
-<form action="{% url 'homeworks:task_detail' task_id %}" method="post" enctype="multipart/form-data">
+<form action="{% url 'courses:task_detail' task_id %}" method="post" enctype="multipart/form-data">
 {% csrf_token %}
 {{ form.as_p }}
 <input type="submit" value="Submit">
@@ -43,7 +43,7 @@ Please upload your file.
 
 {% if is_teacher %}
 
-<a href="{% url 'homeworks:submission_list' task_id %}">Submission List</a>
+<a href="{% url 'courses:submission_list' task_id %}">Submission List</a>
 
 {% endif %}
 
