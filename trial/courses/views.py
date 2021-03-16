@@ -1,8 +1,10 @@
 from django.shortcuts import render, get_object_or_404, reverse, redirect
 from django.http import HttpResponse
 from django.views.generic import View, ListView, DetailView, UpdateView
+from django.contrib import messages
 
 from users.models import User
+from utils.general import error_not_authenticated, return_error, info
 from .models import Course, CourseMember
 from .forms import CreateCourseForm, JoinForm
 from courses.utils import *
@@ -16,23 +18,26 @@ class IndexListView(ListView):
     template_name = "courses/index.html"
 
 class CreatecourseView(View):
+    template_name = 'courses/create.html'
+
     def get(self, request):
         if not request.user.is_authenticated:
-            return render(request, "courses/info.html", {"info": "User not authenticated."})
+            return error_not_authenticated(request)
+
         form = CreateCourseForm(creator=request.user)
-        return render(request, 'courses/create.html', {'form': form})
+        return render(request, self.template_name, {'form': form})
 
     def post(self, request):
         if not request.user.is_authenticated:
-            return render(request, "courses/info.html", {"info": "User not authenticated."})
+            error_not_authenticated(request)
+
         # Create a course for him
         user = request.user
         form = CreateCourseForm(request.POST, creator=user)
         if not form.is_valid():
-            return render(request, 'courses/info.html', {"info": "Successfully create course"})
+            return return_error(request, FORM_NOT_VALID)
 
-        print(form.cleaned_data)
-        # form.cleaned_data['creator'] = user
+        # Save creator
         obj = form.save()
         obj.creator = user
         obj.save()
@@ -49,24 +54,24 @@ class CreatecourseView(View):
         user.is_staff = True
         user.save()
 
-        return render(request, 'courses/info.html', {"info": "Successfully create course"})
+        return info(request, "Successfully create course", redirect_to=reverse("courses:course_homepage", args=[obj.pk]))
 
 def homepage(request, course_id):
     course = get_object_or_404(Course, pk=course_id)
-    context = {}
     user = request.user
+    context = {}
 
     # Two stages
     # 1. Open to everyone or member -> basic info
     # 2. Is teacher -> to member management
     # Stage 1
     privilege = CourseMember.get_highest_course_privilege(user.pk, course.pk)
-    print(privilege)
     if course.is_open or privilege != 4:
         context['course'] = course
+
         if privilege == 4:
             context['role'] = "Visitor"
-            form = JoinForm()
+            form = JoinForm(initial={"id": course_id})
             context['join_form'] = form
         else:
             context['role'] = COURSEMEMBER_TYPE[privilege]
@@ -76,7 +81,6 @@ def homepage(request, course_id):
     if CourseMember.is_teacher_of(user.pk, course_id):
         context['is_teacher'] = True
     
-    print(context)
     return render(request, "courses/homepage.html", context=context)
 
 class EditcourseView(UpdateView):
@@ -95,19 +99,20 @@ class EditcourseView(UpdateView):
 
 def joinCourse(request, course_id):
     if request.method != "POST":
-        return redirect(reverse("courses:course_homepage", args=[course_id]))
+        return info(request, "Wrong HTTP method for {}. POST only".format(request.path),
+                redirect_to=reverse("courses:course_homepage", args=[course_id]))
 
     if not request.user.is_authenticated:
-        return render(request, "info.html", {"info": "Not authenticated yet."})
+        return error_not_authenticated(request)
 
     # Check password and join class
     form = JoinForm(request.POST)
     if form.is_valid():
         data = form.cleaned_data
         if Course.is_password_for_course(course_id, data['password']):
-            CourseMember.join_course_as_student(course_id, request.user.pk)
-            return render(request, "info.html", {"info": "Successfully join as student."})
-    return render(request, "info.html", {"info": "Error occur in joining"})
+            CourseMember.join_course_as_student(request.user.pk, course_id)
+            return info(request, "Successfully join as student.", reverse("courses:course_homepage", args=[course_id]))
+    return return_error(request, FORM_NOT_VALID)
 
 class StudentsListView(ListView):
     paginate_by = 10
@@ -126,8 +131,11 @@ class StudentsListView(ListView):
         return context
 
     def get(self, request, course_id):
-        if not request.user.is_authenticated or not CourseMember.is_teacher_of(request.user.pk, course_id):
-            return render(request, "courses/info.html", {"info": "User not authenticated."})
+        if not request.user.is_authenticated:
+            return error_not_authenticated(request)
+
+        if not CourseMember.is_teacher_of(request.user.pk, course_id):
+            return return_error(USER_NOT_AUTHORIZED)
 
         # Authorized user
         # self.object_list = self.object_list.filter(type__lt=CourseMember.get_course_privilege(request.user.pk, course_id))
@@ -137,7 +145,7 @@ class ChangePrivilegeView(View):
     def get(self, request, member_record):
         course = get_object_or_404(CourseMember, pk=member_record).course
         if not CourseMember.is_teacher_of(request.user.pk, course.pk):
-            return render(request, "courses/info.html", {"info": "User not authenticated."})
+            return return_error(USER_NOT_AUTHORIZED)
 
         cm = get_object_or_404(CourseMember, pk=member_record)
         context = {}
@@ -153,12 +161,11 @@ class ChangePrivilegeView(View):
         course = get_object_or_404(CourseMember, pk=member_record).course
         if CourseMember.is_teacher_of(request.user.pk, course.pk):
             cm = get_object_or_404(CourseMember, pk=member_record)
-            print(cm.user.pk)
-            print(request.POST['user_id'])
             if cm.user.pk != int(request.POST['user_id']):
                 return render(request, "courses/info.html", {"info": "Conflicting record and user."})
             cm.type = request.POST['privilege']
+
             CourseMember.update_member_privilege_staff(cm.user.pk)
             cm.save()
             return redirect(reverse("courses:students_manage", args=[course.pk]))
-        return render(request, "courses/info.html", {"info": "User not authenticated."})
+        return return_error(USER_NOT_AUTHORIZED)

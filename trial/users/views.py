@@ -1,8 +1,9 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, HttpResponseRedirect
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
 from django.views import View
+from django.contrib import messages
 
 from courses.models import Course, CourseMember
 from .models import User
@@ -31,6 +32,9 @@ class LoginView(View):
     template_name = 'users/login.html'
 
     def get(self, request):
+        if request.user.is_authenticated:
+            messages.info(request, message="Please first logout to login.")
+            return redirect(reverse("users:profile", args=[request.user.username]))
         form = LoginForm()
         print(form)
         context = { "form": form }
@@ -47,7 +51,9 @@ class LoginView(View):
             return render(request, self.template_name, context=context)
         login(request, user)
 
-        return render(request, 'users/info.html', {'info': "Successfully login"})
+        # return render(request, 'users/info.html', {'info': "Successfully login"})
+        messages.info(request, "Successfully login")
+        return redirect(request.META['HTTP_REFERER'])
 
 def profile(request, username):
     owner = get_object_or_404(User, username=username)
@@ -64,3 +70,7 @@ def profile(request, username):
 
     print(context)
     return render(request, 'users/profile.html', context)
+
+def logout_view(request):
+    logout(request)
+    return redirect(request.META['HTTP_REFERER'])

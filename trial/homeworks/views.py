@@ -15,7 +15,7 @@ from files.forms import UploadFileForm
 import json
 import datetime
 
-from utils.check import info, checkReqData, checkUser, return_error
+from utils.general import return_error, check_authenticated_and
 from utils.status import *
 from .utils import SUBMISSION_STATUS
 
@@ -37,12 +37,12 @@ class TaskListView(ListView):
         return context
 
     def get(self, request, course_id):
-        if not request.user.is_authenticated or not CourseMember.is_teacher_of(request.user.pk, course_id):
-            return return_error(request, NOT_AUTHENTICATED)
+        res, response = check_authenticated_and(request, CourseMember.is_member_of(request.user.pk, course_id), USER_NOT_AUTHORIZED)
+        if res == False:
+            return response
 
         # Authorized user
         return super(TaskListView, self).get(self, request)
-
     
 
 class CreateTaskView(View):
@@ -51,8 +51,9 @@ class CreateTaskView(View):
         return render(request, "homeworks/task_create.html", {"form": form, 'course_id': course_id})
         
     def post(self, request, course_id):
-        if not request.user.is_authenticated or not CourseMember.is_teacher_of(course_id, request.user.pk):
-            return return_error(request, NOT_AUTHENTICATED)
+        res, response = check_authenticated_and(request, CourseMember.is_teacher_of(request.user.pk, course_id), USER_NOT_AUTHORIZED)
+        if res == False:
+            return response
 
         # Authorized as teacher
         form = TaskForm(request.POST)
@@ -63,7 +64,7 @@ class CreateTaskView(View):
             task.creator = request.user
             task.save()
             messages.info(request, "Create Task successfully")
-            return redirect(reverse("homeworks:task_list", args=[course_id]))
+            return redirect(reverse("courses:task_list", args=[course_id]))
             
         return render(request, "homeworks/task_create.html", {"form": form, 'course_id': course_id})
 
@@ -108,7 +109,7 @@ class TaskDetailView(View):
                 context["is_teacher"] = True
                 context['task_id'] = task_id
             return render(request, self.template_name, context=context)
-        return return_error(request, NOT_AUTHENTICATED)
+        return return_error(request, USER_NOT_AUTHENTICATED)
 
     def post(self, request, task_id):
         task = get_object_or_404(Task, pk=task_id)
@@ -125,7 +126,7 @@ class TaskDetailView(View):
                 # More than one copy
                 messages.error("More than one copy for {} in {}".format(request.user.pk, task_id))
                 return redirect(reverse("task_detail", args=[task_id]))
-        return redirect(reverse("homeworks:task_detail", args=[task_id]))
+        return redirect(reverse("courses:task_detail", args=[task_id]))
 
 class SubmissionListView(ListView):
     paginate_by = 10
@@ -144,8 +145,10 @@ class SubmissionListView(ListView):
 
     def get(self, request, task_id):
         task = get_object_or_404(Task, pk=task_id)
-        if not request.user.is_authenticated or not CourseMember.is_teacher_of(request.user.pk, task.course.pk):
-            return return_error(request, NOT_AUTHENTICATED)
+
+        res, response = check_authenticated_and(request, CourseMember.is_teacher_of(request.user.pk, task.course.pk), USER_NOT_AUTHORIZED)
+        if res == False:
+            return response
 
         # Authorized user
         return super(SubmissionListView, self).get(self, request)

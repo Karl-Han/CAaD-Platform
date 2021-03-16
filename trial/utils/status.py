@@ -1,7 +1,12 @@
-NOT_AUTHENTICATED = 0
+USER_NOT_AUTHENTICATED = 0
+FORM_NOT_VALID = 1
+USER_NOT_AUTHORIZED = 2
+
 
 ERROR_LIST = {
-    NOT_AUTHENTICATED: "User not authenticated for this site.",
+    USER_NOT_AUTHENTICATED: "User not login yet.",
+    FORM_NOT_VALID: "Committed form is not valid.",
+    USER_NOT_AUTHORIZED: "User is not authorized to do this operation"
 }
 
 SUCCESS = 1
