@@ -61,6 +61,15 @@ class CourseMember(models.Model):
 
     @classmethod
     def is_teacher_of(cls, user_id, course_id):
+        """
+        Check user is teacher of course
+
+        Input:
+            * user_id: user's id
+            * course_id: courses's id
+        Output:
+            * True/False
+        """
         return (cls.get_highest_course_privilege(user_id, course_id) < 2)
 
     @classmethod

@@ -7,11 +7,6 @@ from Crypto.Hash import SHA3_512
 import json
 import os
 
-from utils.status import *
-
-def return_error(request, error_id):
-    return render(request, "generics/error.html", { "error_msg": ERROR_LIST[error_id] })
-
 class Visitor:
     nickname = 'Visitor'
     token = 'None'
