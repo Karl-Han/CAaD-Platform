@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import User
 from django.utils.timezone import now
 
@@ -32,6 +33,27 @@ class Course(models.Model):
         if obj:
             return (obj.password == pwd_to_check)
         return False
+    
+    @classmethod
+    def get_all_teacher_courses(cls, user):
+        """
+        Get all the id of courses which user is teacher or admin
+
+        Input:
+            * self: the user
+        Output:
+            * list(course_id)
+        """
+        member_record = CourseMember.objects.filter(user=user)
+        member_teacher = member_record.filter(Q(type = 0) | Q(type = 1))
+        teacher_list = []
+
+        for member in member_teacher:
+            if member.course.pk not in teacher_list:
+                teacher_list.append(member.course.pk)
+
+        return teacher_list
+
 
 
 class CourseMember(models.Model):
