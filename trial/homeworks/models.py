@@ -4,7 +4,6 @@ from datetime import timedelta
 from django.contrib.auth.models import User
 from django.http import FileResponse
 
-
 from courses.models import Course
 from files.models import SubmissionFile
 
@@ -18,7 +17,7 @@ class Task(models.Model):
     description = models.CharField('description', max_length=1024)
     tips = models.CharField('tips', max_length=1024, blank=True)
     answer = models.CharField('answer', max_length=1024, blank=True)
-    docker_api = models.CharField('dockerAPI', max_length=128, blank=True)
+    have_docker = models.BooleanField("have docker experiment", default=False)
 
     # status info
     status = models.IntegerField(
@@ -35,6 +34,7 @@ class Submission(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="submissions", null=True)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="submissions", null=True)
     file = models.OneToOneField(SubmissionFile, on_delete=models.CASCADE, null=True, related_name="submission")
+    # answer field?
 
     status = models.IntegerField(
         'status', default=0, choices=SUBMISSION_STATUS)

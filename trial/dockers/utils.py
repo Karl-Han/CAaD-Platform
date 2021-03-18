@@ -3,57 +3,36 @@ import socket
 import random
 import os
 import shutil
-# from files.models import FileDocker
-from trial.settings import BASE_DIR
 from Crypto.Hash import SHA3_256
 
-# # return Dockerfile path
-# def unzip(zip_src, dst_dir):
-#     r = zipfile.is_zipfile(zip_src)
-#     if r:
-#         fz = zipfile.ZipFile(zip_src, 'r')
-#         for n in fz.namelist():
-#             if 'Dockerfile' in n:
-#                 pth = n
-#                 break
-#         else:
-#             return False
-#         for file in fz.namelist():
-#             fz.extract(file, dst_dir)
-#         return pth
-#     return False
-# 
-# def rmDockerDir(hid):
-#     dst = os.path.join(BASE_DIR, 'media/docker/%d/'%hid)
-#     shutil.rmtree(dst)
-# 
-# def checkPort(port, host):
-#     s = None
-#     try:
-#         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#         s.settimeout(1)
-#         s.connect((host, int(port)))
-#         return True
-#     except socket.error:
-#         return False
-#     finally:
-#         if s:
-#             s.close()
-# 
-# def randPort(lb=1025, ub=65535):
-#     return random.randrange(lb, ub)
-# 
-# def isSameFile(f1, f2):
-#     if f1==f2:
-#         return True
-#     f1.open()
-#     f2.open()
-#     hObj = SHA3_256.new()
-#     hObj.update(f1.read())
-#     hash1 = hObj.hexdigest()
-#     hObj.update(f2.read())
-#     hash2 = hObj.hexdigest()
-#     f1.close()
-#     f2.close()
-#     return hash1==hash2
-# 
+# from files.models import FileDocker
+from trial.settings import BASE_DIR
+
+def unzip(file_path, dst):
+    if zipfile.is_zipfile(file_path):
+        with zipfile.ZipFile(file_path, 'r') as zip_ref:
+            if 'Dockerfile' in zip_ref.namelist():
+                zip_ref.extractall(dst)
+                return True
+    return False
+
+def get_rand_available_port():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    unavailable_ports = []
+
+    while True:
+        port = random.randrange(1025, 65525)
+        location = ("0.0.0.0", port)
+
+        result_of_check = a_socket.connect_ex(location)
+        if result_of_check == 0:
+            # Port is open
+            pass
+        else:
+            # Port is not open
+            if port not in unavailable_ports:
+                return port
+            unavailable_ports.append(port)
+
+def get_docker_client():
+    return DockerClient(base_url=DOCKER_BASE_URL)

@@ -4,7 +4,10 @@ from . import views
 
 app_name = 'dockers'
 urlpatterns = [
-    # path('', views.index, name='index'),
-    # path('create', views.createDocker, name='createDocker'),
-    # path('delete', views.deleteDocker, name='deleteDocker'),
+    path('<int:task_id>/uploadDockerfile', views.UploadDockerfileView.as_view(), name='dockerfile_upload'),
+    # path('image/<int:dockerfile_id>', views.DockerfileDetailView, name='dockerfile_view'),
+    # path('review', views.ReviewDockerListView.as_view(), name='dockerfile_review'),
+    # path('<int:submission_id>/createContainer', views.createContainer, name='container_create'),
+    # path('<int:submission_id>', views.index, name='container_list'),
+    # path('<int:docker_id>/delete', views.deleteContainer, name='container_delete'),
 ]
