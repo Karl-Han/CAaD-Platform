@@ -10,6 +10,7 @@ from .forms import CreateCourseForm, JoinForm
 from courses.utils import *
 
 from .utils import getRandCPwd
+# from .signals import update_user_privilege_signal
 
 class IndexListView(ListView):
     queryset = Course.objects.order_by('name').all()
@@ -165,7 +166,6 @@ class ChangePrivilegeView(View):
                 return render(request, "courses/info.html", {"info": "Conflicting record and user."})
             cm.type = request.POST['privilege']
 
-            CourseMember.update_member_privilege_staff(cm.user.pk)
             cm.save()
             return redirect(reverse("courses:students_manage", args=[course.pk]))
         return return_error(USER_NOT_AUTHORIZED)
