@@ -26,12 +26,12 @@ class TaskAdmin(admin.ModelAdmin):
 class SubmissionAdmin(admin.ModelAdmin):
     actions_on_top = True
     actions_on_bottom = True
-    list_display = ("pk", "course", "user", "task", "file", "status")
+    list_display = ("pk", "submitter", "task", "file", "status")
 
     fieldsets = (
         ("Main information", {
             "fields": (
-                'course', 'user', "task"
+                'submitter', "task"
             ),
         }),
         ("Extra information", {

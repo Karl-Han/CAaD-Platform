@@ -6,12 +6,12 @@ from .models import Image, Instance
 class ImageAdmin(admin.ModelAdmin):
     actions_on_top = True
     actions_on_bottom = True
-    list_display = ("pk", "name", "port_open", "dockerfile", "task")
+    list_display = ("pk", "image_id", "port_open", "dockerfile", "task")
 
     fieldsets = (
         ("Main information", {
             "fields": (
-                'name', "port_open"
+                'image_id', "port_open"
             ),
         }),
         ("Extra information", {

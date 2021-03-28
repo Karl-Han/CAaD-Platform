@@ -10,7 +10,7 @@ from utils.params import DOCKER_BASE_URL
 from .utils import unzip, get_docker_client
 
 class Image(models.Model):
-    name = models.CharField("image id", max_length=64, null=True)
+    image_id = models.CharField("image id", max_length=64, null=True)
     port_open = models.IntegerField("open port", null=True)
     dockerfile = models.OneToOneField(DockerFile, on_delete=models.CASCADE)
     task = models.OneToOneField(Task, on_delete=models.CASCADE)
@@ -45,7 +45,7 @@ class Image(models.Model):
             raise Exception("Error when building image.")
 
         # Successfully built
-        self.name = str(self.task.pk) + ":latest"
+        self.image_id = str(self.task.pk)
         self.dockerfile.status = 3
         self.save()
         return True
@@ -56,7 +56,7 @@ class Image(models.Model):
 
         # Find port and run container
         port_server = get_rand_available_port()
-        container = client.containers.run(self.name, detach=True,
+        container = client.containers.run(self.image_id , detach=True,
             ports={ self.port_open:port_server})
         if container.status != "running":
             # Not running properly
@@ -74,14 +74,15 @@ class Instance(models.Model):
     # CONTAINER_STATUS = [ (0, 'creating'), (1, 'running'), (2, 'stopped'), (3, 'deleted')]
 
     container_id = models.CharField('container id', max_length=64)
-    image = models.ForeignKey(Image, on_delete=models.CASCADE)
     port_local = models.IntegerField('port open in container')
     port_server = models.IntegerField('port allocated on server')
-    submission = models.OneToOneField(Submission, on_delete=models.CASCADE)
 
     create_date = models.DateTimeField('date created', default=timezone.now())
     update_date = models.DateTimeField('date last update', default=timezone.now())
     # status = models.IntegerField('container status', choices=CONTAINER_STATUS)
+
+    image = models.ForeignKey(Image, on_delete=models.CASCADE)
+    submission = models.OneToOneField(Submission, on_delete=models.CASCADE)
 
     def get_server_port(self):
         return self.port_server

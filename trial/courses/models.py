@@ -14,11 +14,12 @@ class Course(models.Model):
     """
     name = models.CharField('course name', max_length=32)
     password = models.CharField('joining password', max_length=8)
-    creator = models.ForeignKey(User, on_delete=models.CASCADE)
-
-    create_date = models.DateTimeField('date created up', default=now())
     description = models.CharField('description', max_length=512)
     is_open = models.BooleanField("Is open to all", default=True)
+
+    create_date = models.DateTimeField('date created up', default=now())
+
+    creator = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return "Course({}-{})".format(self.name, self.creator.username)
@@ -65,10 +66,11 @@ class CourseMember(models.Model):
     MEMBER_TYPE = [(0, 'admin'), (1, 'teacher'),
                    (2, 'assistant'), (3, 'student')]
 
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     type = models.IntegerField(
         choices=MEMBER_TYPE, verbose_name='Member type')
+
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     
     @classmethod
     def get_highest_course_privilege(cls, user_id, course_id):

@@ -12,8 +12,6 @@ class Task(models.Model):
 
     # main info
     title = models.CharField('title', max_length=64)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="tasks", null=True)
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tasks_created", null=True)
     description = models.CharField('description', max_length=1024)
     tips = models.CharField('tips', max_length=1024, blank=True)
     answer = models.CharField('answer', max_length=1024, blank=True)
@@ -26,24 +24,24 @@ class Task(models.Model):
     close_date = models.DateTimeField(
         'date to close', default=timezone.now() + timedelta(days=30))
 
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="tasks", null=True)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tasks_created", null=True)
+
 
 class Submission(models.Model):
     SUBMISSION_STATUS = [ (0, "Unfinished"), (1, "Submitted"), (2, "Commented") ]
 
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="submissions", null=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="submissions", null=True)
-    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="submissions", null=True)
-    file = models.OneToOneField(SubmissionFile, on_delete=models.CASCADE, null=True, related_name="submission")
-    # answer field?
-
     status = models.IntegerField(
         'status', default=0, choices=SUBMISSION_STATUS)
+
     commit_date = models.DateTimeField('date committed', default=timezone.now())
-    # types = ( (0, 'uncomment'), (1, 'commented') )
-    # types = models.IntegerField('homework types')
-    # answer = models.CharField('answer', max_length=1024)
     score = models.IntegerField('score', null=True)
     comment = models.CharField('comment', max_length=1024, null=True)
+
+    # course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="submissions", null=True)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="submissions", null=True)
+    submitter = models.ForeignKey(User, on_delete=models.CASCADE, related_name="submissions", null=True)
+    file = models.OneToOneField(SubmissionFile, on_delete=models.CASCADE, null=True, related_name="submission")
 
     def get_file_response(self):
         path = self.file.get_local_path()
