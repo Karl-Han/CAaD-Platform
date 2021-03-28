@@ -18,3 +18,10 @@ class UploadDockerfileForm(Form):
             raise forms.ValidationError("Wrong content type. It should be application/zip")
 
         return file
+
+    def clean_port_open(self):
+        port_open = self.cleaned_data['port_open']
+        if 0 < port_open < 65536:
+            return port_open
+        raise forms.ValidationError("Invalid port range. port should be in (0, 65536).")
+        

@@ -48,4 +48,3 @@ class DockerFileAdmin(admin.ModelAdmin):
                 update_fields.append("status")
         
         obj.save(update_fields=update_fields)
-        # return super().save_model(request, obj, form, change)

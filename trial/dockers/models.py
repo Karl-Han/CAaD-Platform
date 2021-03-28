@@ -29,7 +29,6 @@ class Image(models.Model):
         if not os.path.exists(dst):
             os.makedirs(dst)
         else:
-            # os.removedirs(dst)
             shutil.rmtree(dst)
             os.makedirs(dst)
         unzip(file_path, dst)
@@ -43,7 +42,6 @@ class Image(models.Model):
             print("res = {}".format(res))
         except Exception as e:
             print("Error: {}".format(e))
-            # return False
 
         if not 'Successful' in str(res[-1]) and not 'cache' in str(res[-2]):
             # Clean the build and stop
@@ -56,7 +54,6 @@ class Image(models.Model):
         self.dockerfile.save()
         self.save()
         print("Successfully built")
-
         return True
 
     def run_new_container(self, submission_id):
@@ -117,7 +114,6 @@ def update_image_status(sender, **kwargs):
     instance = kwargs.pop("instance")
     created = kwargs.pop("created")
     update_fields = kwargs.pop("update_fields")
-    # print("{}\n{}\n{}".format(instance, created, update_fields))
 
     status = False
     if not created:
@@ -128,5 +124,4 @@ def update_image_status(sender, **kwargs):
             print("Building image")
             status = instance.image.build_image()
 
-        print(sender)
-        return status
+    return status
