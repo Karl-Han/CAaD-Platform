@@ -41,7 +41,7 @@ class Submission(models.Model):
     # course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="submissions", null=True)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="submissions", null=True)
     submitter = models.ForeignKey(User, on_delete=models.CASCADE, related_name="submissions", null=True)
-    file = models.OneToOneField(SubmissionFile, on_delete=models.CASCADE, null=True, related_name="submission")
+    file = models.OneToOneField(SubmissionFile, on_delete=models.CASCADE, null=True, blank=True, related_name="submission")
 
     def get_file_response(self):
         path = self.file.get_local_path()

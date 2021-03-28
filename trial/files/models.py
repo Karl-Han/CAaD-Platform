@@ -23,12 +23,13 @@ class SubmissionFile(File):
             content_types=['application/pdf', 'application/excel', 'application/msword', 'text/plain', 'text/csv', 'application/zip', 'image/jpeg', 'image/gif'])
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        self.file_hash = hash(self.file.chunks())
-        self.file.open()
-        self.name = self.file.name
-        self.content_type = self.file.content_type
+        if self.pk is None:
+            self.file_hash = hash(self.file.chunks())
+            self.file.open()
+            self.name = self.file.name
+            self.content_type = self.file.content_type
 
-        return super().save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
+        super().save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
     def get_local_path(self):
         return self.file.path
@@ -52,12 +53,15 @@ class DockerFile(File):
     status = models.IntegerField("dockerfile review status", choices=DOCKERFILE_STATUS, default=1)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        self.file_hash = hash(self.file.chunks())
-        self.file.open()
-        self.name = self.file.name
-        self.content_type = "application/zip"
+        if self.pk is None:
+            self.file_hash = hash(self.file.chunks())
+            self.file.open()
+            self.name = self.file.name
+            self.content_type = "application/zip"
 
-        return super().save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
+        print("update_fields in Dockerfile: {}".format(update_fields))
+
+        super().save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
     def get_local_path(self):
         return self.file.path

@@ -1,12 +1,16 @@
+from django.conf import settings
+
 import zipfile
 import socket
 import random
 import os
 import shutil
+import docker
 from Crypto.Hash import SHA3_256
 
+from utils.params import DOCKER_BASE_URL
+
 # from files.models import FileDocker
-from trial.settings import BASE_DIR
 
 def unzip(file_path, dst):
     if zipfile.is_zipfile(file_path):
@@ -24,7 +28,7 @@ def get_rand_available_port():
         port = random.randrange(1025, 65525)
         location = ("0.0.0.0", port)
 
-        result_of_check = a_socket.connect_ex(location)
+        result_of_check = s.connect_ex(location)
         if result_of_check == 0:
             # Port is open
             pass
@@ -35,4 +39,4 @@ def get_rand_available_port():
             unavailable_ports.append(port)
 
 def get_docker_client():
-    return DockerClient(base_url=DOCKER_BASE_URL)
+    return docker.DockerClient(base_url=DOCKER_BASE_URL)

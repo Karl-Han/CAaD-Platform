@@ -26,12 +26,12 @@ class SubmissionFileAdmin(admin.ModelAdmin):
 class DockerFileAdmin(admin.ModelAdmin):
     actions_on_top = True
     actions_on_bottom = True
-    list_display = ("pk", "name", "file", "create_date", "hash")
+    list_display = ("pk", "name", "file", "create_date", "hash", "status")
 
     fieldsets = (
         ("Main information", {
             "fields": (
-                'name', 'file'
+                "name", "file", "status"
             ),
         }),
         ("Extra information", {
@@ -40,3 +40,12 @@ class DockerFileAdmin(admin.ModelAdmin):
             )
         }),
     )
+
+    def save_model(self, request, obj, form, change):
+        update_fields = []
+        if change:
+            if form.initial['status'] != form.cleaned_data['status']:
+                update_fields.append("status")
+        
+        obj.save(update_fields=update_fields)
+        # return super().save_model(request, obj, form, change)

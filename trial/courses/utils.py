@@ -1,5 +1,4 @@
 import random
-# from homeworks.models import Homework
 
 COURSEMEMBER_TYPE = ['admin', 'teacher', 'asistant', 'student']
 COURSEMEMBER_ADMIN = 0

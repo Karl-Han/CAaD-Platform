@@ -17,7 +17,7 @@ class TaskAdmin(admin.ModelAdmin):
         }),
         ("Extra information", {
             "fields": (
-                "status", "description"
+                "status", "description", "have_docker"
             )
         }),
     )

@@ -1,0 +1,30 @@
+{% extends 'generics/base.html' %}
+
+{% block content %}
+
+<p>Status: <b>
+{% if status == 0 %}
+Not started
+{% elif status == 1%}
+Started
+{% else %}
+Unknown
+{% endif %}
+</b></p>
+
+{% if instance %}
+<h2>Information</h2>
+<p>Server port: {{ instance.port_server }}</p>
+{% endif %}
+
+<form action="{% url 'dockers:container_create' submission_id %}" method="get">
+{% csrf_token %}
+<input type="submit" value="Create!">
+</form>
+
+<form action="{% url 'dockers:container_delete' submission_id %}" method="get">
+{% csrf_token %}
+<input type="submit" value="Delete!">
+</form>
+
+{% endblock content %}
