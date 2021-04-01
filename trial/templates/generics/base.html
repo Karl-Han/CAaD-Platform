@@ -11,73 +11,108 @@
         <title>{% block title %}{% endblock %}</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="{% static 'default_style.css' %}">
-        <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.5.3/css/bootstrap.min.css" rel="stylesheet">
+        {#<link rel="stylesheet" href="{% static 'default_style.css' %}">#}
+
+
+        <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+        <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+        <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
     </head>
     <body>
-    <div class="container logo">
+
+<div class="container-fluid logo">
     {# hard coded image, in the `trial/trial/static` #}
-    <a href="{% url 'home' %}"><img src="{% static 'images/logo.png' %}" alt="LOGO" width="50" height="50"></a>
+    <div class="col-sm-2 center">
+        {% comment %} <a href="{% url 'home' %}"><img src="{% static 'images/logo.png' %}" alt="LOGO" width="50" height="50"></a> {% endcomment %}
+        <a href="{% url 'home' %}">CAaD Platform</a>
     </div>
-    <div class="container subject">
-    {% block subject %}
-    Here comes the subject.
-    {% endblock %}
+        <div class="col-sm-10">
+            {% block subject %}
+            <h1>Subject.</h1>
+            {% endblock %}
+        </div>
+    <div class="user pull-right">
+        {% block status %}
+        
+        {% if user.is_authenticated %}
+        Hello 
+        <a href="{% url 'users:profile' user.username %}">
+        {{ user.username }}
+        </a>
+        . <a href="{% url 'users:logout_view' %}">Logout</a>
+        {% else %}
+        Anonymous User. <a href="{% url 'users:login' %}">Login</a>
+        {% endif %}
+        {% endblock status %}
     </div>
+</div>
 
-    <div class="container navi">
+
+<div class="container-fluid">
+    <div class="col-sm-2">
     {% block navigation %}
-    Here comes the navigation frame.
+    <nav class="navbar navbar-default" role="navigation">
+        <ul class="nav nav-pills nav-stacked">
+            <li class="active"><a href="#">iOS</a></li>
+            <li><a href="#">SVN</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                    Java
+                    <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="#">jmeter</a></li>
+                    <li><a href="#">EJB</a></li>
+                    <li><a href="#">Jasper Report</a></li>
+                    <li class="divider"></li>
+                    <li><a href="#">分离的链接</a></li>
+                    <li class="divider"></li>
+                    <li><a href="#">另一个分离的链接</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
     {% endblock %}
     </div>
-    <div class="container user">
-    {% block status %}
-    
-    {% if user.is_authenticated %}
-    Hello 
-    <a href="{% url 'users:profile' user.username %}">
-    {{ user.username }}
-    </a>
-    . <a href="{% url 'users:logout_view' %}">Logout</a>
-    {% else %}
-    Anonymous User. <a href="{% url 'users:login' %}">Login</a>
-    {% endif %}
-    {% endblock status %}
-    </div>
 
-    <div class="main-content">
+    <div class="main-content col-sm-10">
+
+    {% comment "" %}
+        <ul class="breadcrumb">
+            <li><a href="#">Home</a></li>
+            <li><a href="#">2013</a></li>
+            <li class="active">十一月</li>
+        </ul>
+    {% endcomment %}
+
     {% block error_display %}
-
     {% if form %}
+        {% if form.errors %}
+        
+        <ul class="errors">
+            {% for k, v in form.errors.items %}
 
-    {% if form.errors %}
-    
-    <ul class="errors">
-    {% for k, v in form.errors.items %}
+            <li>{{ k }}: {{ v }}</li>
+            
+            {% endfor %}
+        </ul>
+        {% endif %}
 
-    <li>{{ k }}: {{ v }}</li>
-    
-    {% endfor %}
-    </ul>
+        {% if form.non_field_errors %}
+        
+        <ul class="non_field_errors">
+        {% for k, v in form.non_field_errors %}
+
+        <li>{{ k }}: {{ v }}</li>
+        
+        {% endfor %}
+        </ul>
+        
+        {% endif %}
     {% endif %}
-
-    {% if form.non_field_errors %}
-    
-    <ul class="non_field_errors">
-    {% for k, v in form.non_field_errors %}
-
-    <li>{{ k }}: {{ v }}</li>
-    
-    {% endfor %}
-    </ul>
-    
-    {% endif %}
-    {% endif %}
-
     {% endblock error_display %}
 
     {% block message_framework %}
-
     {% if messages %}
     <ul class="messages">
         {% for message in messages %}
@@ -88,15 +123,22 @@
         {% endfor %}
     </ul>
     {% endif %}
-    
     {% endblock message_framework %}
-    {% block content%}
-    Here comes the main content
-    {% endblock %}
-    </div>
 
-        <script src="" async defer>
-        {% block script %}{% endblock script %}
-        </script>
+
+    {% block content%}
+    <div>
+        <p>Here comes the main content</p>
+    </div>
+    {% endblock %}
+
+    </div>
+</div>
+
+
+<script src="" async defer>
+{% block script %}{% endblock script %}
+</script>
+
     </body>
 </html>
