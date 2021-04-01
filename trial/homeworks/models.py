@@ -27,6 +27,9 @@ class Task(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="tasks", null=True)
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tasks_created", null=True)
 
+    def __str__(self):
+        return "Task({}):{}".format(self.pk, self.title)
+
 
 class Submission(models.Model):
     SUBMISSION_STATUS = [ (0, "Unfinished"), (1, "Submitted"), (2, "Commented") ]
