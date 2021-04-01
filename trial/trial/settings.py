@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'files.apps.FilesConfig',
     'dockers.apps.DockersConfig',
     
-    'django.contrib.admin',
+    # 'django.contrib.admin',
+    'trial.apps.MyAdminConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -60,8 +61,8 @@ ROOT_URLCONF = 'trial.urls'
 
 TEMPLATES = [
     {
+        'DIRS': [os.path.join(BASE_DIR, "templates"), ],
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
