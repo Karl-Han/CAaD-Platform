@@ -1,5 +1,8 @@
 from django.shortcuts import render
+from django.template.loader import render_to_string
+
 from utils.status import *
+from courses.models import CourseMember
 
 def get_referer(request):
     return request.META.get('HTTP_REFERER')
@@ -47,3 +50,29 @@ def check_authenticated_and(request, criteria=None, error_code=None):
     if criteria is not None and not criteria:
         return (False, return_error(request, error_code))
     return (True, None)
+
+def get_navigation(user):
+    try:
+        privilege = CourseMember.get_highest_privilege(user.pk)
+        # User privilege: navi content
+        # 4(Not even student): Homepage
+        # 3(Student): My Courses, My Tasks, My Submissions
+        # 2(TA): Student + Teaching
+        # 1(Teacher): TA + Background
+        # 0(Course Admin): Teacher
+
+        # list(dict(name, url))
+        navi_list = []
+        if privilege <= 3:
+            pass
+            if privilege <= 2:
+                if privilege <= 1:
+                    if privilege == 0:
+                        pass
+        else:
+            # 4 or something else
+            pass
+        return render_to_string("generics/navi.html", {"navi_list": navi_list})
+    except Exception as e:
+        print(e)
+        return ""

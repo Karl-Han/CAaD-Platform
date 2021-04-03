@@ -137,6 +137,14 @@ class CourseMember(models.Model):
             group.user_set.add(user)
         user.save()
         group.save()
+    @classmethod
+    def get_highest_privilege(cls, user_id):
+        cm = cls.objects.filter(user__pk=user_id).only("type").distinct()
+        privilege = 4
+        for p in cm:
+            if p < privilege:
+                privilege = p
+        return p
 
 @receiver(post_save, sender=CourseMember)
 def update_member_privilege_staff(sender, **kwargs):

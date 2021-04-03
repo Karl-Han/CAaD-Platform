@@ -8,76 +8,84 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>{% block title %}{% endblock %}</title>
+        <title>{{ title }}</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        {#<link rel="stylesheet" href="{% static 'default_style.css' %}">#}
+        <link rel="stylesheet" href="{% static 'css/base.css' %}">
 
+        <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.0.0-beta2/css/bootstrap.min.css" rel="stylesheet">
+        <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.0.0-beta2/js/bootstrap.bundle.min.js"></script>
 
-        <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
-        <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
-        <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        {# runnob tutorial #}
+        {# <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css"> #}
+        {# <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script> #}
+        {# <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script> #}
     </head>
     <body>
 
-<div class="container-fluid logo">
+<div id="header" class="header container-fluid row">
     {# hard coded image, in the `trial/trial/static` #}
-    <div class="col-sm-2 center">
+    <div class="logo col-sm-2 center">
         {% comment %} <a href="{% url 'home' %}"><img src="{% static 'images/logo.png' %}" alt="LOGO" width="50" height="50"></a> {% endcomment %}
         <a href="{% url 'home' %}">CAaD Platform</a>
     </div>
-        <div class="col-sm-10">
-            {% block subject %}
-            <h1>Subject.</h1>
-            {% endblock %}
+        <div class="title col-sm-8">
+            <h1>{{ title | default:"Fill in title variable" }}<h1>
         </div>
-    <div class="user pull-right">
+    <div class="user col-sm-2">
+
         {% block status %}
-        
-        {% if user.is_authenticated %}
-        Hello 
-        <a href="{% url 'users:profile' user.username %}">
-        {{ user.username }}
-        </a>
-        . <a href="{% url 'users:logout_view' %}">Logout</a>
-        {% else %}
-        Anonymous User. <a href="{% url 'users:login' %}">Login</a>
-        {% endif %}
+            {% if user.is_authenticated %}
+            Hello 
+            <a href="{% url 'users:profile' user.username %}">
+            {{ user.username }}
+            </a>
+            . <a href="{% url 'users:logout_view' %}">Logout</a>
+            {% else %}
+            Anonymous User. <a href="{% url 'users:login' %}">Login</a>
+            {% endif %}
         {% endblock status %}
+
     </div>
 </div>
 
 
-<div class="container-fluid">
-    <div class="col-sm-2">
-    {% block navigation %}
+<div id="body" class="container-fluid row">
+    <div class="navi col-sm-2 flex-fill">
     <nav class="navbar navbar-default" role="navigation">
-        <ul class="nav nav-pills nav-stacked">
-            <li class="active"><a href="#">iOS</a></li>
-            <li><a href="#">SVN</a></li>
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+        <ul class="nav nav-pills flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href='{% url "home" %}'>Homepage</a>
+            </li>
+            {% block navigation %}
+            <li class="nav-item">
+                <a class="nav-link" href='{% url "home" %}'>Fill in navigation block</a>
+            </li>
+            {% comment %} <li class="nav-item"><a class="nav-link" href="#">SVN</a></li>
+            <li class="nav-item dropdown btn-group">
+                <a href="#" class="nav-link dropdown-toggle" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
                     Java
                     <b class="caret"></b>
                 </a>
-                <ul class="dropdown-menu">
-                    <li><a href="#">jmeter</a></li>
-                    <li><a href="#">EJB</a></li>
-                    <li><a href="#">Jasper Report</a></li>
-                    <li class="divider"></li>
-                    <li><a href="#">分离的链接</a></li>
-                    <li class="divider"></li>
-                    <li><a href="#">另一个分离的链接</a></li>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                    <li><a class="dropdown-item" href="#">jmeter</a></li>
+                    <li><a class="dropdown-item" href="#">EJB</a></li>
+                    <li><a class="dropdown-item" href="#">Jasper Report</a></li>
+                    <li class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#">分离的链接</a></li>
+                    <li class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#">另一个分离的链接</a></li>
                 </ul>
-            </li>
+            </li> {% endcomment %}
+            {% endblock %}
+
         </ul>
     </nav>
-    {% endblock %}
     </div>
 
-    <div class="main-content col-sm-10">
+    <div class="content col-sm-10 container">
 
-    {% comment "" %}
+    {% comment "breadcrumb" %}
         <ul class="breadcrumb">
             <li><a href="#">Home</a></li>
             <li><a href="#">2013</a></li>
@@ -85,9 +93,35 @@
         </ul>
     {% endcomment %}
 
+
+    <div class="row align-items-baseline">
+        {% block content%}
+        <div>
+            <p>Here comes the main content</p>
+        </div>
+        {% endblock %}
+    </div>
+
+
+    <div class="row align-items-center">
+    {% block message_framework %}
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+            {% if message.level == default_message_levels.error %}important: {% endif %}
+            {{ message }}
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endblock message_framework %}
+    </div>
+
+    <div class="row align-items-end">
     {% block error_display %}
     {% if form %}
-        {% if form.errors %}
+        {% comment %} {% if form.errors %}
         
         <ul class="errors">
             {% for k, v in form.errors.items %}
@@ -96,14 +130,15 @@
             
             {% endfor %}
         </ul>
-        {% endif %}
+        {% endif %} {% endcomment %}
 
         {% if form.non_field_errors %}
         
-        <ul class="non_field_errors">
-        {% for k, v in form.non_field_errors %}
+        <p>Here are the errors:</p>
+        <ol class="non_field_errors bg-danger">
+        {% for error in form.non_field_errors %}
 
-        <li>{{ k }}: {{ v }}</li>
+        <li>{{ error }}</li>
         
         {% endfor %}
         </ul>
@@ -111,28 +146,11 @@
         {% endif %}
     {% endif %}
     {% endblock error_display %}
-
-    {% block message_framework %}
-    {% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
-            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}Important: {% endif %}
-            {{ message }}
-        </li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-    {% endblock message_framework %}
-
-
-    {% block content%}
-    <div>
-        <p>Here comes the main content</p>
     </div>
-    {% endblock %}
+
 
     </div>
+
 </div>
 
 

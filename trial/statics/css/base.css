@@ -1,0 +1,28 @@
+.header {
+    background-color: blue;
+}
+
+.logo {
+    background-color: lightpink;
+}
+
+.user {
+    background-color: lightsalmon;
+}
+
+.title {
+    background-color: lightgray;
+}
+
+#body {
+    min-height: 90vh;
+}
+
+.navi {
+    background-color: lightblue;
+}
+
+.content {
+    background-color: lightgreen;
+    border-top: 10px;
+}

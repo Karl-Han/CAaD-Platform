@@ -88,7 +88,7 @@ class EditcourseView(UpdateView):
     model = Course
     fields = ['name', 'password', 'description', 'is_open']
     success_url = "/"
-    template_name = "courses/course_form.html"
+    template_name = "courses/update.html"
 
     def form_valid(self, form):
         clean = form.cleaned_data
@@ -163,7 +163,8 @@ class ChangePrivilegeView(View):
         if CourseMember.is_teacher_of(request.user.pk, course.pk):
             cm = get_object_or_404(CourseMember, pk=member_record)
             if cm.user.pk != int(request.POST['user_id']):
-                return render(request, "courses/info.html", {"info": "Conflicting record and user."})
+                # return render(request, "courses/info.html", {"info": "Conflicting record and user."})
+                return info(request, "Conflicting record and user")
             cm.type = request.POST['privilege']
 
             cm.save()

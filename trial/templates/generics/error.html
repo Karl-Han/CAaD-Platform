@@ -5,11 +5,11 @@
 {{ error_msg }}
 
 {% if error_id == 0 %}
-<a href="{% url 'users:login' %}">Login</a>
+    <a href="{% url 'users:login' %}">Login</a>
 {% endif %}
 
 {% if redirect_to != None %}
-<a href="{{ redirect_to }}">Go back.</a>
+    <a href="{{ redirect_to }}">Go back.</a>
 {% endif %}
 
 {% endblock content %}

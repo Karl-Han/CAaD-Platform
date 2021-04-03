@@ -10,25 +10,25 @@ from courses.models import Course, CourseMember
 from .models import SubmissionFile
 from .forms import UploadFileForm
 
-# # Create your views here.
-class FileCreateView(CreateView):
-    model = SubmissionFile
-    fields = ["file"]
-    template_name = "files/file_create.html"
-    success_url = '/'
+# class FileCreateView(CreateView):
+#     model = SubmissionFile
+#     fields = ["file"]
+#     template_name = "files/file_create.html"
+#     success_url = '/'
 
 class TestUploadFileFormView(View):
+    template_name = "files/create.html"
 
     def get(self, request):
         form = UploadFileForm()
-        return render(request, "files/file_create.html", { "form": form })
+        return render(request, self.template_name, { "form": form })
 
     def post(self, request):
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             file = form.save()
             messages.info("Successfully upload file.")
-        return render(request, "files/file_create.html", { "form": form })
+        return render(request, self.template_name, { "form": form })
 
 def downloadFile(request, file_id):
     return SubmissionFile.get_file_response(file_id)

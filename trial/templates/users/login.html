@@ -1,16 +1,52 @@
 {% extends "generics/base.html" %}
 
-  {% load static %}
-  <link rel="stylesheet" type="text/css" href="{% static "public/css/main.css" %}">
+{% block content %}
+<div class="container-fluid">
+    {% comment %} <div class="row">
+        {% if error %}
+            <h1>{{ error }}</h1>
+        {% endif %}
+    </div> {% endcomment %}
 
-  {% block content %}
-  {% if error %}
-  <h1>{{ error }}</h1>
-  {% endif %}
     <form action="{% url 'users:login' %}" method="post">
-    {% csrf_token %}
-    {{ form }}
-    <input type="submit" value="Login" >
+        {% csrf_token %}
+        {% comment %} {{ form }} {% endcomment %}
+    <div class="row">
+        {{ form.non_field_errors }}
+    </div>
+
+    <div class="row">
+        <div class="col-2 text-center">
+            <label for="{{ form.username.id_for_label }}">Username:</label>
+        </div>
+        <div class="col-3">
+            {% comment %} {{ form.username}} {% endcomment %}
+            <input type="text" id="{{ form.username.id_for_label }}" name="username" class="form-control" required>
+        </div>
+        <div class="col-auto text-warning">
+            {{ form.username.errors }}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-2 text-center">
+            <label for="{{ form.password.id_for_label }}">Password:</label>
+        </div>
+        <div class="col-3">
+            {% comment %} {{ form.password }} {% endcomment %}
+            <input type="password" id="{{ form.password.id_for_label }}" name="password" class="form-control" aria-describedby="passwordHelpInline" required>
+        </div>
+        <div class="col-auto text-warning">
+            <span id="passwordHelpInline" class="form-text">
+                {{ form.password.errors }}
+            </span>
+        </div>
+    </div>
+        <input type="submit" value="Login" >
     </form>
-    <a href="{% url "users:signup" %}" id="signup">注册</a>
-  {% endblock content %}
+    <a href="{% url "users:signup" %}" id="signup">Sign up</a>
+
+
+</div>
+
+{% endblock content %}

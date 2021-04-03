@@ -12,9 +12,11 @@ from utils.general import error_not_authenticated, return_error, info
 from homeworks.models import Submission
 
 class UploadDockerfileView(View):
+    template_name = "dockers/dockerfile_upload.html"
+
     def get(self, request, task_id):
         form = UploadDockerfileForm()
-        return render(request, "dockers/upload.html", {"form": form, "task_id": task_id})
+        return render(request, self.template_name, {"form": form, "task_id": task_id})
 
     def post(self, request, task_id):
         form = UploadDockerfileForm(request.POST, request.FILES)
@@ -37,7 +39,7 @@ class UploadDockerfileView(View):
             image.task.have_docker = True
             image.task.save()
             messages.info(request, "Successfully Upload Dockerfile zip")
-        return render(request, "dockers/upload.html", {"form": form})
+        return render(request, self.template_name, {"form": form})
 
 def containerStatus(request, submission_id):
     # Render status of container in submission for user
