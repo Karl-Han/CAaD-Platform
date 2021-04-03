@@ -2,6 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import authenticate
 
 # from .models import UserAuxiliary
 
@@ -29,3 +30,12 @@ class LoginForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(LoginForm, self).__init__(*args, **kwargs)
+    
+    def clean(self):
+        data = self.cleaned_data
+        user = authenticate(username=data['username'], password=data['password'])
+
+        if user == None:
+            raise ValidationError("No such user or wrong password")
+
+        return data

@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
 from django.views import View
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 
 from courses.models import Course, CourseMember
 from .models import User
@@ -36,24 +37,21 @@ class LoginView(View):
             messages.info(request, message="Please first logout to login.")
             return redirect(reverse("users:profile", args=[request.user.username]))
         form = LoginForm()
-        print(form)
         context = { "form": form }
         return render(request, self.template_name, context)
 
     def post(self, request):
-        user = authenticate(request, username=request.POST['username'], password=request.POST['password'])
         # print(user)
 
-        if user is None:
-            # Not an authenticated user
-            print("Not Authenticated from {}".format(request.POST['username']))
-            context = { 'form': LoginForm(request.POST), 'error': "No such user or wrong password"}
-            return render(request, self.template_name, context=context)
-        login(request, user)
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            user = authenticate(request, username=form.cleaned_data['username'], password=form.cleaned_data['password'])
+            login(request, user)
+            messages.info(request, "Successfully login")
+            return redirect(request.META['HTTP_REFERER'])
+        print(form.non_field_errors)
 
-        # return render(request, 'users/info.html', {'info': "Successfully login"})
-        messages.info(request, "Successfully login")
-        return redirect(request.META['HTTP_REFERER'])
+        return render(request, self.template_name, {"form": form})
 
 def profile(request, username):
     owner = get_object_or_404(User, username=username)
