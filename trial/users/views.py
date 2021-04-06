@@ -16,9 +16,15 @@ from .utils import get_enrolled_courses
 class SignupView(View):
     template_name = 'users/signup.html'
 
+    def get_context_data(self, **kwargs):
+        context = {}
+        context["title"] = "Sign Up"
+        return context
+
     def get(self, request):
         user = UserForm()
-        context = {"form": user}
+        context = self.get_context_data()
+        context["form"] = user
         return render(request, self.template_name, context)
 
     def post(self, request):
@@ -29,36 +35,46 @@ class SignupView(View):
             obj.auxiliary = UserAuxiliary(user=obj)
             obj.auxiliary.save()
             return HttpResponseRedirect(reverse("users:login"))
-        context = {'form': form}
+
+        context = self.get_context_data()
+        context["form"] = form
         return render(request, self.template_name, context)
 
 class LoginView(View):
     template_name = 'users/login.html'
 
+    def get_context_data(self, **kwargs):
+        context = {}
+        context["title"] = "Login"
+        return context
+
     def get(self, request):
+        context = self.get_context_data()
+        form = LoginForm()
+
         if request.user.is_authenticated:
             messages.info(request, message="Please first logout to login.")
             return redirect(reverse("users:profile", args=[request.user.username]))
-        form = LoginForm()
-        context = { "form": form, "title": "Login"}
+
+        context["form"] = form
+        context["title"] = "Login"
         return render(request, self.template_name, context)
 
     def post(self, request):
-        # print(user)
-
         form = LoginForm(request.POST)
+
         if form.is_valid():
             user = authenticate(request, username=form.cleaned_data['username'], password=form.cleaned_data['password'])
             login(request, user)
             messages.info(request, "Successfully login")
             return redirect(request.META['HTTP_REFERER'])
-        print(form.non_field_errors)
 
         return render(request, self.template_name, {"form": form})
 
 def profile(request, username):
     owner = get_object_or_404(User, username=username)
     context = {}
+    context['title'] = "User Profile"
 
     # Get login user
     # * if user_id == user.pk -> print self profile + enrolled courses
@@ -79,15 +95,27 @@ def logout_view(request):
 
 class EditUserInfo(View):
     template_name = "users/edit.html"
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context["title"] = "Edit User Info"
+        return context
+    
     def get(self, request, user_id):
         # Do authentication elsewhere
+        context = self.get_context_data()
+
         user = request.user
         form = EditForm(initial={'email': user.email, 'realname': user.auxiliary.realname, 'uid': user.auxiliary.uid})
-        return render(request, self.template_name, {"form": form})
+        context["form"] = form
+
+        return render(request, self.template_name, context)
 
     def post(self, request, user_id):
         # Do authentication elsewhere
+        context = self.get_context_data()
         form = EditForm(request.POST)
+
         if form.is_valid():
             if user_id == request.user.pk:
                 user = request.user
@@ -101,5 +129,6 @@ class EditUserInfo(View):
                 user.auxiliary.save()
                 messages.info(request, "Successfully update")
                 return redirect(reverse("users:profile", args=[user.username]))
+        context['form'] = form
 
-        return render(request, self.template_name, {"form": form})
+        return render(request, self.template_name, context)
