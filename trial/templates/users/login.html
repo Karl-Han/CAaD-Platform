@@ -18,35 +18,36 @@
             </div>
         {% endif %}
 
-    <div class="row">
-        <div class="col-2 text-center">
-            <label for="{{ form.username.id_for_label }}">Username:</label>
+        <div class="row">
+            <div class="col-2 text-center">
+                <label for="{{ form.username.id_for_label }}">Username:</label>
+            </div>
+            <div class="col-3">
+                {% comment %} {{ form.username}} {% endcomment %}
+                <input type="text" id="{{ form.username.id_for_label }}" name="username" class="form-control" required>
+            </div>
+            <div class="col-auto text-warning">
+                {{ form.username.errors }}
+            </div>
         </div>
-        <div class="col-3">
-            {% comment %} {{ form.username}} {% endcomment %}
-            <input type="text" id="{{ form.username.id_for_label }}" name="username" class="form-control" required>
-        </div>
-        <div class="col-auto text-warning">
-            {{ form.username.errors }}
-        </div>
-    </div>
 
-    <div class="row">
-        <div class="col-2 text-center">
-            <label for="{{ form.password.id_for_label }}">Password:</label>
+        <div class="row">
+            <div class="col-2 text-center">
+                <label for="{{ form.password.id_for_label }}">Password:</label>
+            </div>
+            <div class="col-3">
+                {% comment %} {{ form.password }} {% endcomment %}
+                <input type="password" id="{{ form.password.id_for_label }}" name="password" class="form-control" aria-describedby="passwordHelpInline" required>
+            </div>
+            <div class="col-auto text-warning">
+                <span id="passwordHelpInline" class="form-text">
+                    {{ form.password.errors }}
+                </span>
+            </div>
         </div>
-        <div class="col-3">
-            {% comment %} {{ form.password }} {% endcomment %}
-            <input type="password" id="{{ form.password.id_for_label }}" name="password" class="form-control" aria-describedby="passwordHelpInline" required>
-        </div>
-        <div class="col-auto text-warning">
-            <span id="passwordHelpInline" class="form-text">
-                {{ form.password.errors }}
-            </span>
-        </div>
-    </div>
         <input type="submit" value="Login" >
     </form>
+
     <a href="{% url "users:signup" %}" id="signup">Sign up</a>
 
 

@@ -1,0 +1,52 @@
+{% extends 'generics/base.html' %}
+
+{% block content %}
+
+<form action="{% url 'users:edit' user.pk %}" method="post">
+    {% csrf_token %}
+
+    {% comment %} {{ form }} {% endcomment %}
+    {% if form.non_field_errors %}
+        <div class="row text-danger">
+            <p>Errors occur:</p>
+            {{ form.non_field_errors.as_ul }}
+        </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-2 text-center">
+            <label for="{{ form.email.id_for_label }}">Email:</label>
+        </div>
+        <div class="col-3">
+            {% comment %} {{ form.username}} {% endcomment %}
+            <input type="text" id="{{ form.email.id_for_label }}" name="email" class="form-control" value="{{ form.email.value }}" required>
+        </div>
+        <div class="col-auto text-warning">
+            {{ form.email.errors }}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-2 text-center">
+            <label for="{{ form.realname.id_for_label }}">Realname:</label>
+        </div>
+        <div class="col-3">
+            <input type="text" id="{{ form.realname.id_for_label }}" name="realname" class="form-control" value="{{ form.realname.value }}">
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-2 text-center">
+            <label for="{{ form.uid.id_for_label }}">UID:</label>
+        </div>
+        <div class="col-3">
+            <input type="text" id="{{ form.uid.id_for_label }}" name="uid" class="form-control" value="{{ form.uid.value }}">
+        </div>
+    </div>
+
+    <input type="submit" value="Update" >
+</form>
+
+
+
+{% endblock content %}

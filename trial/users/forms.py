@@ -39,3 +39,8 @@ class LoginForm(forms.Form):
             raise ValidationError("No such user or wrong password")
 
         return data
+
+class EditForm(forms.Form):
+    realname = forms.CharField(max_length=16)
+    uid = forms.CharField(max_length=32)
+    email = forms.EmailField()

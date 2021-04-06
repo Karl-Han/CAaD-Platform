@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 
 from courses.models import Course, CourseMember
 from .models import UserAuxiliary
-from .forms import UserForm, LoginForm
+from .forms import UserForm, LoginForm, EditForm
 
 from .utils import get_enrolled_courses
 
@@ -77,3 +77,29 @@ def logout_view(request):
     logout(request)
     return redirect(request.META['HTTP_REFERER'])
 
+class EditUserInfo(View):
+    template_name = "users/edit.html"
+    def get(self, request, user_id):
+        # Do authentication elsewhere
+        user = request.user
+        form = EditForm(initial={'email': user.email, 'realname': user.auxiliary.realname, 'uid': user.auxiliary.uid})
+        return render(request, self.template_name, {"form": form})
+
+    def post(self, request, user_id):
+        # Do authentication elsewhere
+        form = EditForm(request.POST)
+        if form.is_valid():
+            if user_id == request.user.pk:
+                user = request.user
+                data = form.cleaned_data
+
+                user.email = data['email']
+                user.auxiliary.realname = data['realname']
+                user.auxiliary.uid = data['uid']
+
+                user.save()
+                user.auxiliary.save()
+                messages.info(request, "Successfully update")
+                return redirect(reverse("users:profile", args=[user.username]))
+
+        return render(request, self.template_name, {"form": form})
