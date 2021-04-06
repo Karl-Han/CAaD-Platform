@@ -3,6 +3,7 @@
 <link rel="stylesheet" type="text/css" href="{% static " public/css/main.css" %}">
 
 {% block content %}
+
   {% if form.non_field_errors %}
   <ul class='form-errors' style="color:Tomato;">
     {% for error in form.non_field_errors %}
@@ -13,10 +14,75 @@
 
   <form action="{% url 'users:signup' %}" method="post">
     {% csrf_token %}
-    {{ form }}
-    <input type="submit" value="Submit">
+    {% comment %} {{ form.as_table }} {% endcomment %}
+
+    <div class="row m-3">
+        <div class="col-3 text-center">
+            <label for="{{ form.username.id_for_label }}" class="col-form-label">
+              Username:
+            </label>
+        </div>
+        <div class="col-3">
+            {% comment %} {{ form.username}} {% endcomment %}
+            <input type="text" id="{{ form.username.id_for_label }}"
+               name="username" class="form-control"  required>
+        </div>
+        <div class="col-auto text-warning">
+            {{ form.username.errors }}
+        </div>
+    </div>
+
+    <div class="row m-3">
+        <div class="col-3 text-center">
+            <label for="{{ form.email.id_for_label }}" class="col-form-label">
+              Email:
+            </label>
+        </div>
+        <div class="col-3">
+            {% comment %} {{ form.username}} {% endcomment %}
+            <input type="text" id="{{ form.email.id_for_label }}" 
+              name="email" class="form-control"  required>
+        </div>
+        <div class="col-auto text-warning">
+            {{ form.email.errors }}
+        </div>
+    </div>
+
+    <div class="row m-3">
+        <div class="col-3 text-center">
+            <label for="{{ form.password1.id_for_label }}" class="col-form-label">
+              Password:
+            </label>
+        </div>
+        <div class="col-3">
+            {% comment %} {{ form.username}} {% endcomment %}
+            <input type="text" id="{{ form.password1.id_for_label }}"
+              name="password1" class="form-control"  required>
+        </div>
+        <div class="col-auto text-warning">
+            {{ form.password1.errors }}
+        </div>
+    </div>
+
+    <div class="row m-3">
+        <div class="col-3 text-center">
+            <label for="{{ form.password2.id_for_label }}" class="col-form-label">
+              Password Again:
+            </label>
+        </div>
+        <div class="col-3">
+            {% comment %} {{ form.username}} {% endcomment %}
+            <input type="text" id="{{ form.password2.id_for_label }}"
+               name="password2" class="form-control"  required>
+        </div>
+        <div class="col-auto text-warning">
+            {{ form.password2.errors }}
+        </div>
+    </div>
+
+    <input type="submit" value="Create"
+      class="col-auto offset-md-5">
   </form>
 
-
-  <a href="{% url 'users:login' %}" id="login">登陆</a>
+  {% comment %} <a href="{% url 'users:login' %}" id="login">登陆</a> {% endcomment %}
 {% endblock content %}

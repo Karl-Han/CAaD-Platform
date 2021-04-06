@@ -17,11 +17,18 @@ class UserForm(UserCreationForm):
 
         fields = (
             'username', 'password1', 'password2', 'email' 
-            # 'uid', 'realname'
         )
 
     def __init__(self, *args, **kwargs):
         super(UserForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        data = self.cleaned_data
+
+        if data['password1'] != data['password2']:
+            raise ValidationError("Two password not match")
+
+        return data
 
 class LoginForm(forms.Form):
     # email = forms.EmailField(label='email')
