@@ -93,17 +93,7 @@
         </ul>
     {% endcomment %}
 
-
-    <div class="row align-items-baseline">
-        {% block content%}
-        <div>
-            <p>Here comes the main content</p>
-        </div>
-        {% endblock %}
-    </div>
-
-
-    <div class="row align-items-center">
+    <div class="row align-items-baseline text-warning">
     {% block message_framework %}
     {% if messages %}
     <ul class="messages">
@@ -117,6 +107,16 @@
     {% endif %}
     {% endblock message_framework %}
     </div>
+
+
+    <div class="row align-items-center">
+        {% block content%}
+        <div>
+            <p>Here comes the main content</p>
+        </div>
+        {% endblock %}
+    </div>
+
 
     <div class="row align-items-end">
     {% block error_display %}

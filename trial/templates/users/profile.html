@@ -5,17 +5,15 @@
 {% endblock title %}
 
 {% block content %}
+
 {% if course_info_list == None %}
-{# Viewing from other users #}
-<p>Hello {{ user.name }}, this is profile of {{ others_name }}</p>
+  {# Viewing from other users #}
+  <p>Hello {{ user.name }}, this is profile of {{ others_name }}</p>
 {% else %}
-<p>Welcome {{ user.name }}!</p>
+  <p>Welcome {{ owner.username }}!</p>
 {% endif %}
 
-{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
-
 {# Here is for open user profile #}
-
 {% if course_info_list %}
 <div id="myCourses">
   <h2>My Courses:</h2>
@@ -24,5 +22,18 @@
     <li><a href="{% url 'courses:course_homepage' course_info.id %}">{{ course_info.name }}({{ course_info.role }})</a></li>
     {% endfor %}
   </ul>
+  <h2>My Information:</h2>
+  <table>
+    <tr>
+      <td>Email</td>
+      <td>: {{ owner.email | default:"N/A" }}</td>
+    </tr>
+    <tr>
+      <td>UID</td>
+      <td>: {{ owner_aux.uid | default:"N/A" }}</td>
+    </tr>
+  </table>
+  <a href="{% url 'users:edit' owner.pk"></a>
 {% endif %}
+
 {% endblock content %}

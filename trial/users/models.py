@@ -8,11 +8,11 @@ import datetime
 
 
 class UserAuxiliary(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="auxiliary", unique=True)
 
     # avatar = models.CharField('avatar path', max_length=128, blank=True)
-    realname = models.CharField('real name', max_length=16, blank=True)
-    uid = models.CharField('user(student/teacher) number', max_length=32, blank=True)
+    realname = models.CharField('real name', max_length=16, blank=True, null=True)
+    uid = models.CharField('user(student/teacher) number', max_length=32, blank=True, null=True)
 
     def __str__(self):
         return "<User: {}".format(self.user.username)

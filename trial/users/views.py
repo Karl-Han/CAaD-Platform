@@ -5,9 +5,10 @@ from django.urls import reverse
 from django.views import View
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
 
 from courses.models import Course, CourseMember
-from .models import User
+from .models import UserAuxiliary
 from .forms import UserForm, LoginForm
 
 from .utils import get_enrolled_courses
@@ -24,7 +25,9 @@ class SignupView(View):
         form = UserForm(request.POST)
 
         if form.is_valid():
-            form.save()
+            obj = form.save()
+            obj.auxiliary = UserAuxiliary(user=obj)
+            obj.auxiliary.save()
             return HttpResponseRedirect(reverse("users:login"))
         context = {'form': form}
         return render(request, self.template_name, context)
@@ -37,7 +40,7 @@ class LoginView(View):
             messages.info(request, message="Please first logout to login.")
             return redirect(reverse("users:profile", args=[request.user.username]))
         form = LoginForm()
-        context = { "form": form }
+        context = { "form": form, "title": "Login"}
         return render(request, self.template_name, context)
 
     def post(self, request):
@@ -60,15 +63,17 @@ def profile(request, username):
     # Get login user
     # * if user_id == user.pk -> print self profile + enrolled courses
     # * not equal -> print open profile
-    print(owner)
-    if request.user.is_authenticated and request.user.pk == owner.pk:
-        context["course_info_list"] = get_enrolled_courses(request.user)
-    else:
+    # print(owner)
+    if request.user != owner:
         context["others_name"] = owner.get_username()
+    else:
+        context["course_info_list"] = get_enrolled_courses(request.user)
+        context["owner"] = owner
+        context["owner_aux"] = owner.auxiliary
 
-    print(context)
     return render(request, 'users/profile.html', context)
 
 def logout_view(request):
     logout(request)
     return redirect(request.META['HTTP_REFERER'])
+
