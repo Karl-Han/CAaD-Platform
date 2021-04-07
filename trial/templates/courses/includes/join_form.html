@@ -1,0 +1,33 @@
+<form method="post" action="{% url 'courses:course_join' course.pk %}">
+    {% csrf_token %}
+    {% comment %} {{ join_form }} {% endcomment %}
+    <div class="row m-3">
+        <div class="col-3 text-center">
+            <label for="{{ form.id.id_for_label }}" class="col-form-label">
+              ID:
+            </label>
+        </div>
+        <div class="col-3">
+            <input type="text" id="{{ form.id.id_for_label }}"
+               name="id" class="form-control"  required>
+        </div>
+        <div class="col-auto text-warning">
+            {{ form.id.errors }}
+        </div>
+    </div>
+    <div class="row m-3">
+        <div class="col-3 text-center">
+            <label for="{{ form.password.id_for_label }}" class="col-form-label">
+              Password:
+            </label>
+        </div>
+        <div class="col-3">
+            <input type="text" id="{{ form.password.id_for_label }}"
+               name="password" class="form-control"  required>
+        </div>
+        <div class="col-auto text-warning">
+            {{ form.password.errors }}
+        </div>
+    </div>
+        <input type="submit" value="Join!" class="col-auto offset-md-5">
+</form>
