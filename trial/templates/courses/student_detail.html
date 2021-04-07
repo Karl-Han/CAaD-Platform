@@ -2,35 +2,55 @@
 
 {% block content %}
 
+<div class="container-fluid">
 <form action="{% url 'courses:privilege_change' member_record %}" method='post'>
-{% csrf_token %}
-{{ user_local.username }}
-{{ type_readable }}
+    {% if form.non_field_errors %}
+        <div class="row text-danger">
+            <p>Errors occur:</p>
+            {{ form.non_field_errors.as_ul }}
+        </div>
+    {% endif %}
+    {% csrf_token %}
 
-<input type="text" name="user_id" value="{{ user_local.pk }}" hidden>
-{% if privilege == 0 %}
+    <div class="row">
+        <label for="username" class="col-4">Member Username</label>
+        <p id="username" class="col-3">{{ cm.user.username }}</p>
+    </div>
+    <div class="row">
+        <label for="username" class="col-4">Member Privilege</label>
+        <p id="username" class="col-3">{{ type_readable }}</p>
+    </div>
+    <div class="row">
+        <input type="text" name="user_id" value="{{ cm.user.pk }}" hidden>
+        {% if privilege == 0 %}
 
-<label for="privilege">Choose a new privilege:</label>
+            <label for="privilege" class="col-4">Choose a new privilege:</label>
+            <select name="privilege" id="privilege_select" class="col-3" style="height: 100%" required>
+                <option value="" selected disabled hidden>Choose Privilege</option>
+                <option value="1">Teacher</option>
+                <option value="2">Assistant</option>
+                <option value="3">Student</option>
+            </select> 
 
-<select name="privilege" id="privilege_select" required>
-  <option value="" selected disabled hidden>Choose Privilege</option>
-  <option value="1">Teacher</option>
-  <option value="2">Assistant</option>
-  <option value="3">Student</option>
-</select> 
+        {% else %}
+        {# Privilege == 1 #}
 
-{% else %}
-{# Privilege == 1 #}
+            <select name="privilege" id="privilege_select" required>
+            <option value="" selected disabled hidden>Choose Privilege</option>
+            <option value="2">Assistant</option>
+            <option value="3">Student</option>
+            </select> 
 
-<select name="privilege" id="privilege_select" required>
-  <option value="" selected disabled hidden>Choose Privilege</option>
-  <option value="2">Assistant</option>
-  <option value="3">Student</option>
-</select> 
+        {% endif %}
+    </div>
+    <div class="row">
+        <div class="d-flex justify-content-center mt-3">
+            <input type="submit" value="Submit new Privilege" style="width: 16rem;">
+        </div>
+    </div>
 
-{% endif %}
-<input type="submit" value="Submit new Privilege">
 
 </form>
 
+</div>
 {% endblock content %}

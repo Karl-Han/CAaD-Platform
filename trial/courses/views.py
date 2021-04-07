@@ -171,8 +171,7 @@ class ChangePrivilegeView(View, ContextMixin):
 
         cm = get_object_or_404(CourseMember, pk=member_record)
         context = self.get_context_data()
-        context['user_local'] = cm.user
-        context['type'] = cm.type
+        context['cm'] = cm
         context['type_readable'] = COURSEMEMBER_TYPE[cm.type]
         context['course_id'] = course.pk
         context['member_record'] = member_record 
@@ -183,9 +182,11 @@ class ChangePrivilegeView(View, ContextMixin):
         course = get_object_or_404(CourseMember, pk=member_record).course
         if CourseMember.is_teacher_of(request.user.pk, course.pk):
             cm = get_object_or_404(CourseMember, pk=member_record)
+
             if cm.user.pk != int(request.POST['user_id']):
                 # return render(request, "courses/info.html", {"info": "Conflicting record and user."})
                 return info(request, "Conflicting record and user")
+
             update_fields = []
             if cm.type != request.POST['privilege']:
                 cm.type = request.POST['privilege']
