@@ -3,52 +3,59 @@
 {% block content %}
 
 {% if course %}
-<h2>Welcome, {{ user.username }} as {{ role }}</h2>
-{# Basic information #}
-<div class="container-fluid">
-    <div class="basic_info">
-        <div class="row">
-            <h5>Course ID: {{ course.pk }}</h5>
-            <h5>Course name:{{ course.name }}</h5>
-            <h5>Creator:{{ course.creator.username }}</h5>
-            <h5>Descrition:{{ course.description }}</h5>
+    <h2>Welcome, {{ user.username }} as {{ role }}</h2>
+    {# Basic information #}
+    <div class="container-fluid">
+        <div class="basic_info">
+            <div class="row">
+                <h5>Course ID: {{ course.pk }}</h5>
+                <h5>Course name:{{ course.name }}</h5>
+                <h5>Creator:{{ course.creator.username }}</h5>
+                <h5>Descrition:{{ course.description }}</h5>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="extend container-fluid">
-{% if is_teacher %}
-    <div class="row">
-        <p>Course password: {{ course.password }}</p>
-        <p>
-        Open course?: 
-            {% if course.is_open %}
-            Yes
-            {% else %}
-            No. Student can only join with Course ID and course password.
-            {% endif %}
-        </p>
+    <div class="extend container-fluid">
+    {% if is_teacher %}
+        <div class="row">
+            <p>Course password: {{ course.password }}</p>
+            <p>
+            Open course?: 
+                {% if course.is_open %}
+                Yes
+                {% else %}
+                No. Student can only join with Course ID and course password.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="row">
+            <a href="{% url 'courses:course_edit' course.pk %}" class="btn btn-primary col-3 text-center" style="height: max-content;">
+                Edit Info 
+            </a>
+            <br>
+            <a href="{% url 'courses:students_manage' course.pk %}" class="btn btn-primary col-3" style="height: max-content;">
+                Student List
+            </a>
+            <br>
+            <a href="{% url 'courses:task_list' course.pk %}" class="btn btn-primary col-3" style="height: max-content;">
+                Review Submissions
+            </a>
+        </div>
+    {% endif %}
+
+    {% if is_member %}
+    <div class="row mt-3">
+        <a href="{% url 'courses:task_list' course.pk %}" class="btn btn-primary col-3">Task list</a>
     </div>
+    {% else %}
+    <h2>Join Course NOW</h2>
+        {% include "courses/includes/join_form.html" %}
+    {% endif %}
 
-    <div class="row">
-        <a href="{% url 'courses:course_edit' course.pk %}" class="btn btn-primary col-3 text-center" style="height: max-content;">
-            Edit Info 
-        </a><br>
-        <a href="{% url 'courses:task_list' course.pk %}" class="btn btn-primary col-3" style="height: max-content;">
-            Review Submissions
-        </a>
-    </div>
-{% endif %}
-
-{% if is_member %}
-<div class="row mt-3">
-    <a href="{% url 'courses:task_list' course.pk %}" class="btn btn-primary col-3">Task list</a>
-</div>
 {% else %}
-<h2>Join Course NOW</h2>
-    {% include "courses/includes/join_form.html" %}
-{% endif %}
-
-
+    <h2>This course is not OPEN for public access.</h2>
+    <p>Please contact the course administrator.</p>
 {% endif %}
 {% endblock content %}

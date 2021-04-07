@@ -148,14 +148,14 @@ class CourseMember(models.Model):
 
 @receiver(post_save, sender=CourseMember)
 def update_member_privilege_staff(sender, **kwargs):
+    print("Receive signal from {}".format(sender))
     instance = kwargs.pop("instance")
     created = kwargs.pop("created")
     update_fields = kwargs.pop("update_fields")
 
     if not created:
-        if "type" not in update_fields:
+        if update_fields is not None and "type" not in update_fields:
             return False
     CourseMember.update_member_privilege_staff(instance.user.pk)
 
-    print(sender)
     return True

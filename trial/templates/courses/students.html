@@ -2,52 +2,60 @@
 
 {% block content %}
 
-<table>
-
-<tr>
-<th hidden="True">id</th>
-<th>Course</th>
-<th>User</th>
-<th>Type</th>
-<th>Change</th>
-</tr>
+<div class="container mt-2">
+<table class="table">
+<thead>
+    <tr>
+    <th scope="col" hidden="True">id</th>
+    <th scope="col">User</th>
+    <th scope="col">Type</th>
+    <th scope="col">Change</th>
+    </tr>
+</thead>
 
 {% for member_record in student_list %}
-
-<tr>
-<td hidden="True">{{ member_record.pk }}</td>
-<td>{{ member_record.course }}</td>
-<td>{{ member_record.user }}</td>
-<td>
-{% if member_record.type == 1 %}
-Teacher
-{% elif member_record.type == 2 %}
-Assistant
-{% elif member_record.type == 3 %}
-Student
-{% endif %} 
-</td>
-<td><a href="{% url 'courses:change_privilege' member_record.pk %}">Change privilege</a></td>
-</tr>
-
+    <tr>
+        <td hidden="True">{{ member_record.pk }}</td>
+        <td>
+            <a href="{% url 'users:profile' member_record.user.username %}">
+                {{ member_record.user }}
+            </a>
+        </td>
+        <td>
+            {% if member_record.type == 1 %}
+            Teacher
+            {% elif member_record.type == 2 %}
+            Assistant
+            {% elif member_record.type == 3 %}
+            Student
+            {% endif %} 
+        </td>
+        <td><a href="{% url 'courses:privilege_change' member_record.pk %}">Change privilege</a></td>
+    </tr>
 {% endfor %}
-
-
-
 </table>
-
-<div class="pagination">
-    <span class="page-links">
-        {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-        {% endif %}
-        <span class="page-current">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-        </span>
-        {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">next</a>
-        {% endif %}
-    </span>
 </div>
+
+{% if page_obj %}
+<nav aria-label="Page navigation example">
+<ul class="pagination d-flex justify-content-center m-3">
+    {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% else %}
+        <li class="page-item"><a class="page-link disabled" href="#" disabled>Previous</a></li>
+    {% endif %}
+    {% for object in page_obj.paginator.page_range %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ forloop.counter }}">{{ forloop.counter }}</a>
+        </li>
+    {% endfor %}
+    {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+        {% else %}
+        <li class="page-item"><a class="page-link disabled" href="#" disabled>Next</a></li>
+    {% endif %}
+</ul>
+</nav>
+{% endif %}
 
 {% endblock content %}

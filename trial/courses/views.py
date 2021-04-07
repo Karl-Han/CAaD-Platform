@@ -14,7 +14,7 @@ from .utils import getRandCPwd
 # from .signals import update_user_privilege_signal
 
 class IndexListView(ListView):
-    queryset = Course.objects.order_by('name').all()
+    queryset = Course.objects.order_by('name').filter(is_open=True).all()
     paginate_by = 3
     context_object_name = "course_list"
     template_name = "courses/index.html"
@@ -157,6 +157,7 @@ class StudentsListView(ListView):
         return super(StudentsListView, self).get(self, request)
 
 class ChangePrivilegeView(View, ContextMixin):
+    template_name = "courses/student_detail.html"
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "Change Member Privilege"
@@ -176,7 +177,7 @@ class ChangePrivilegeView(View, ContextMixin):
         context['course_id'] = course.pk
         context['member_record'] = member_record 
         context['privilege'] = CourseMember.get_highest_course_privilege(request.user.pk, course.pk)
-        return render(request, "courses/student_detail.html", context)
+        return render(request, self.template_name, context)
 
     def post(self, request, member_record):
         course = get_object_or_404(CourseMember, pk=member_record).course
@@ -185,7 +186,10 @@ class ChangePrivilegeView(View, ContextMixin):
             if cm.user.pk != int(request.POST['user_id']):
                 # return render(request, "courses/info.html", {"info": "Conflicting record and user."})
                 return info(request, "Conflicting record and user")
-            cm.type = request.POST['privilege']
+            update_fields = []
+            if cm.type != request.POST['privilege']:
+                cm.type = request.POST['privilege']
+                update_fields.append("type")
 
             cm.save()
             return redirect(reverse("courses:students_manage", args=[course.pk]))

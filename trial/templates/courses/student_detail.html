@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<form action="{% url 'courses:change_privilege' member_record %}" method='post'>
+<form action="{% url 'courses:privilege_change' member_record %}" method='post'>
 {% csrf_token %}
 {{ user_local.username }}
 {{ type_readable }}
