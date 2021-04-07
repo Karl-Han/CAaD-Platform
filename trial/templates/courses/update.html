@@ -3,9 +3,66 @@
 {% block content %}
 
 <form method="post">
-{% csrf_token %}
-{{ form }}
-<input type="submit" value="Submit!">
+    {% if form.non_field_errors %}
+        <div class="row text-danger">
+            <p>Errors occur:</p>
+            {{ form.non_field_errors.as_ul }}
+        </div>
+    {% endif %}
+    {% csrf_token %}
+
+    <div class="row m-3">
+        <div class="col-3 text-center">
+            <label for="{{ form.name.id_for_label }}" class="col-form-label">
+              Course Name:
+            </label>
+        </div>
+        <div class="col-3">
+            <input type="text" id="{{ form.name.id_for_label }}"
+               name="name" class="form-control" value="{{ form.name.value }}" required>
+        </div>
+        <div class="col-auto text-warning">
+            {{ form.name.errors }}
+        </div>
+    </div>
+    <div class="row m-3">
+        <div class="col-3 text-center">
+            <label for="{{ form.password.id_for_label }}" class="col-form-label">
+                Joining Password
+            </label>
+        </div>
+        <div class="col-3">
+            <input type="text" id="{{ form.password.id_for_label }}"
+               name="password" value="{{ form.password.value }}" class="form-control">
+        </div>
+        <div class="col-auto text-warning">
+            {{ form.password.errors }}
+        </div>
+    </div>
+    <div class="row m-3">
+        <div class="col-3 text-center">
+            <label for="{{ form.description.id_for_label }}" class="col-form-label">
+                Description
+            </label>
+        </div>
+        <div class="col-3">
+            <input type="text" id="{{ form.description.id_for_label }}"
+               name="description" value="{{ form.description.value }}" class="form-control"  required>
+        </div>
+        <div class="col-auto text-warning">
+            {{ form.description.errors }}
+        </div>
+    </div>
+
+    <div class="form-check offset-3">
+    <label class="form-check-label col-3" for="{{ form.is_open.id_for_label }}">
+        Open Course
+    </label>
+    <input class="form-check-input" type="checkbox" value="" id="{{ form.is_open.id_for_label }}">
+    </div>
+
+    <input type="submit" value="Submit!" 
+        class="col-auto offset-md-5">
 </form>
 
 {% endblock content %}
