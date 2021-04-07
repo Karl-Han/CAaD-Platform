@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, reverse, redirect
 from django.http import HttpResponse
 from django.views.generic import View, ListView, DetailView, UpdateView
+from django.views.generic.base import ContextMixin
 from django.contrib import messages
 
 from users.models import User
@@ -14,19 +15,28 @@ from .utils import getRandCPwd
 
 class IndexListView(ListView):
     queryset = Course.objects.order_by('name').all()
-    paginate_by = 2
+    paginate_by = 3
     context_object_name = "course_list"
     template_name = "courses/index.html"
 
-class CreatecourseView(View):
+class CreatecourseView(View, ContextMixin):
     template_name = 'courses/create.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Create Course"
+        return context
+    
 
     def get(self, request):
         if not request.user.is_authenticated:
             return error_not_authenticated(request)
 
+        context = self.get_context_data()
         form = CreateCourseForm(creator=request.user)
-        return render(request, self.template_name, {'form': form})
+        context['form'] = form
+
+        return render(request, self.template_name, context)
 
     def post(self, request):
         if not request.user.is_authenticated:
@@ -35,32 +45,30 @@ class CreatecourseView(View):
         # Create a course for him
         user = request.user
         form = CreateCourseForm(request.POST, creator=user)
-        if not form.is_valid():
-            return return_error(request, FORM_NOT_VALID)
+        if form.is_valid():
+            # Save creator
+            obj = form.save()
+            obj.creator = user
+            obj.save()
+            # Add role in CourseMember
+            cm = CourseMember(
+                course = obj, 
+                user = user,
+                type = COURSEMEMBER_ADMIN
+            )
+            cm.save()
+            # Set user as staff
+            user.is_staff = True
+            user.save()
 
-        # Save creator
-        obj = form.save()
-        obj.creator = user
-        obj.save()
-
-        # Add role in CourseMember
-        cm = CourseMember(
-            course = obj, 
-            user = user,
-            type = COURSEMEMBER_ADMIN
-        )
-        cm.save()
-
-        # Set user as staff
-        user.is_staff = True
-        user.save()
-
-        return info(request, "Successfully create course", redirect_to=reverse("courses:course_homepage", args=[obj.pk]))
+            return info(request, "Successfully create course", redirect_to=reverse("courses:course_homepage", args=[obj.pk]))
+        return return_error(request, FORM_NOT_VALID)
 
 def homepage(request, course_id):
     course = get_object_or_404(Course, pk=course_id)
     user = request.user
     context = {}
+    context['title'] = "Course Homepage"
 
     # Two stages
     # 1. Open to everyone or member -> basic info
@@ -89,6 +97,11 @@ class EditcourseView(UpdateView):
     fields = ['name', 'password', 'description', 'is_open']
     success_url = "/"
     template_name = "courses/update.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] =  "Edit Course"
+        return context
 
     def form_valid(self, form):
         clean = form.cleaned_data
@@ -128,6 +141,7 @@ class StudentsListView(ListView):
 
     def get_context_data(self, *args, object_list=None, **kwargs):
         context = super().get_context_data(*args, object_list=object_list, **kwargs)
+        context['title'] = "Student List"
         context['course_id'] = self.kwargs['course_id']
         return context
 
@@ -142,14 +156,20 @@ class StudentsListView(ListView):
         # self.object_list = self.object_list.filter(type__lt=CourseMember.get_course_privilege(request.user.pk, course_id))
         return super(StudentsListView, self).get(self, request)
 
-class ChangePrivilegeView(View):
+class ChangePrivilegeView(View, ContextMixin):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Change Member Privilege"
+        return context
+    
+
     def get(self, request, member_record):
         course = get_object_or_404(CourseMember, pk=member_record).course
         if not CourseMember.is_teacher_of(request.user.pk, course.pk):
             return return_error(USER_NOT_AUTHORIZED)
 
         cm = get_object_or_404(CourseMember, pk=member_record)
-        context = {}
+        context = self.get_context_data()
         context['user_local'] = cm.user
         context['type'] = cm.type
         context['type_readable'] = COURSEMEMBER_TYPE[cm.type]

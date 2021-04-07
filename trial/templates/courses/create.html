@@ -1,13 +1,59 @@
 {% extends "generics/base.html" %}
-    {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static "public/css/main.css" %}">
 
-    {% block content %}
-    {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
-    <form id="doCreate" action="{% url "courses:course_create" %}" method="POST">
+{% block content %}
+
+<form action="{% url "courses:course_create" %}" method="POST">
+    {% if form.non_field_errors %}
+        <div class="row text-danger">
+            <p>Errors occur:</p>
+            {{ form.non_field_errors.as_ul }}
+        </div>
+    {% endif %}
     {% csrf_token %}
-    {{ form }}
-      <input type="submit" value="submit">
-    </form>
+    <div class="row m-3">
+        <div class="col-3 text-center">
+            <label for="{{ form.name.id_for_label }}" class="col-form-label">
+              Course Name:
+            </label>
+        </div>
+        <div class="col-3">
+            <input type="text" id="{{ form.name.id_for_label }}"
+               name="name" class="form-control"  required>
+        </div>
+        <div class="col-auto text-warning">
+            {{ form.name.errors }}
+        </div>
+    </div>
+    <div class="row m-3">
+        <div class="col-3 text-center">
+            <label for="{{ form.password.id_for_label }}" class="col-form-label">
+              Password:
+            </label>
+        </div>
+        <div class="col-3">
+            <input type="text" id="{{ form.password.id_for_label }}"
+               name="password" class="form-control">
+        </div>
+        <div class="col-auto text-warning">
+            {{ form.password.errors }}
+        </div>
+    </div>
+    <div class="row m-3">
+        <div class="col-3 text-center">
+            <label for="{{ form.description.id_for_label }}" class="col-form-label">
+              Description:
+            </label>
+        </div>
+        <div class="col-3">
+            <input type="text" id="{{ form.description.id_for_label }}"
+               name="description" class="form-control"  required>
+        </div>
+        <div class="col-auto text-warning">
+            {{ form.description.errors }}
+        </div>
+    </div>
+    <input type="submit" value="Create" 
+        class="col-auto offset-md-5">
+</form>
 
-    {% endblock content %}
+{% endblock content %}
