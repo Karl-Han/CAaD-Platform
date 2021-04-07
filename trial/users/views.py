@@ -53,7 +53,6 @@ class LoginView(View):
         form = LoginForm()
 
         if request.user.is_authenticated:
-            messages.info(request, message="Please first logout to login.")
             return redirect(reverse("users:profile", args=[request.user.username]))
 
         context["form"] = form
@@ -79,7 +78,6 @@ def profile(request, username):
     # Get login user
     # * if user_id == user.pk -> print self profile + enrolled courses
     # * not equal -> print open profile
-    # print(owner)
     if request.user != owner:
         context["others_name"] = owner.get_username()
     else:

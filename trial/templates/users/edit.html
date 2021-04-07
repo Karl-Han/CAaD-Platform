@@ -5,7 +5,6 @@
 <form action="{% url 'users:edit' user.pk %}" method="post">
     {% csrf_token %}
 
-    {% comment %} {{ form }} {% endcomment %}
     {% if form.non_field_errors %}
         <div class="row text-danger">
             <p>Errors occur:</p>
@@ -44,7 +43,8 @@
         </div>
     </div>
 
-    <input type="submit" value="Update" >
+    <input type="submit" value="Update" 
+        class="col-auto offset-md-5">
 </form>
 
 

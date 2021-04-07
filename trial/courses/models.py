@@ -150,7 +150,7 @@ class CourseMember(models.Model):
 def update_member_privilege_staff(sender, **kwargs):
     instance = kwargs.pop("instance")
     created = kwargs.pop("created")
-    update_fields = kwargs("update_fields")
+    update_fields = kwargs.pop("update_fields")
 
     if not created:
         if "type" not in update_fields:
