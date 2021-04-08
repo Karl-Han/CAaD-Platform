@@ -3,8 +3,27 @@
 {% block content %}
 
 <form action="{% url 'courses:task_create' course_id %}" method="post">
+    {% if form.non_field_errors %}
+        <div class="row text-danger">
+            <p>Errors occur:</p>
+            {{ form.non_field_errors.as_ul }}
+        </div>
+    {% endif %}
 {% csrf_token %}
-{{ form }}
-<input type="submit" value="Submit">
+
+    <table class="table table-borderless">
+    {% for field in form %}
+        <tr>
+            <td>
+                {{ field.label_tag }}
+            </td>
+            <td>
+                {{ field }}
+            </td>
+            <td>{{ field.errors }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+<input type="submit" value="Submit" class="offset-4">
 </form>
 {% endblock content %}
