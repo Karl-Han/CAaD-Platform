@@ -18,6 +18,11 @@ class IndexListView(ListView):
     paginate_by = 3
     context_object_name = "course_list"
     template_name = "courses/index.html"
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Homepage"
+        return context
+    
 
 class CreatecourseView(View, ContextMixin):
     template_name = 'courses/create.html'
