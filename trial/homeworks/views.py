@@ -36,6 +36,7 @@ class TaskListView(ListView):
         context = super().get_context_data(*args, object_list=object_list, **kwargs)
         context['course_id'] = self.kwargs['course_id']
         context['title'] = "Task List"
+        context['is_teacher'] = (CourseMember.get_highest_course_privilege(self.request.user.pk, context['course_id']) < 2)
         return context
 
     def get(self, request, course_id):
@@ -135,7 +136,7 @@ class TaskDetailView(View, ContextMixin):
             else:
                 # link to submission list
                 context["is_teacher"] = True
-                context['']
+                # context['']
             return render(request, self.template_name, context=context)
         return return_error(request, USER_NOT_AUTHENTICATED)
 

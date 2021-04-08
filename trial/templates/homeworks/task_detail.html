@@ -44,8 +44,7 @@
         <a href="{% url 'courses:submission_list' task.pk %}" class="btn btn-primary" style="width: auto">Submission List</a>
     </div>
 </div>
-{% endif %}
-
+{% else %}
 <div class="row">
 {% if to_submit %}
     {% include "homeworks/includes/upload_homeworkfile_form.html" %}
@@ -88,6 +87,8 @@
     {% include "dockers/includes/container_status.html" %}
 {% endif %}
 </div>
+
+{% endif %}
 
 
 {% endblock content %}
