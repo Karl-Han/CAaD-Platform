@@ -19,9 +19,11 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from .views import index
+import courses.views
 
 urlpatterns = [
-    path('', index, name="home"),
+    path('', courses.views.IndexListView.as_view(), name='home'),
+    # path('', index, name="home"),
     path('users/', include('users.urls')),
     path('courses/', include('courses.urls')),
     path('homeworks/', include('homeworks.urls')),

@@ -57,6 +57,7 @@ class LoginView(View):
 
         context["form"] = form
         context["title"] = "Login"
+        request.session['referer'] = request.META['HTTP_REFERER']
         return render(request, self.template_name, context)
 
     def post(self, request):
@@ -66,7 +67,7 @@ class LoginView(View):
             user = authenticate(request, username=form.cleaned_data['username'], password=form.cleaned_data['password'])
             login(request, user)
             messages.info(request, "Successfully login")
-            return redirect(request.META['HTTP_REFERER'])
+            return redirect(request.session["referer"])
 
         return render(request, self.template_name, {"form": form})
 
