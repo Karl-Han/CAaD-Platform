@@ -26,8 +26,8 @@
 <div id="header" class="header container-fluid row">
     {# hard coded image, in the `trial/trial/static` #}
     <div class="logo col-sm-2 center">
-        {% comment %} <a href="{% url 'home' %}"><img src="{% static 'images/logo.png' %}" alt="LOGO" width="50" height="50"></a> {% endcomment %}
-        <a href="{% url 'home' %}">CAaD Platform</a>
+        <a href="{% url 'home' %}"><img src="{% static 'images/logo.png' %}" alt="CAaD" width="" height="50"></a>
+        {% comment %} <a href="{% url 'home' %}">CAaD Platform</a> {% endcomment %}
     </div>
         <div class="title col-sm-8">
             <h1>{{ title | default:"Fill in title variable" }}<h1>
