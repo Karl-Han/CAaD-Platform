@@ -1,0 +1,34 @@
+<div class="card-body col-6">
+    <h5 class="card-title">Experiment</h5>
+    <div class="card-text">
+        <p>Status: 
+            <b>{% if submission.instance.status == 1 %}
+            Started
+            {% else %}
+            Not started
+            {% endif %}</b>
+        </p>
+        {% if submission.instance %}
+        <p>Server port: {{ submission.instance.port_server }}</p>
+        {% endif %}
+
+    <div class="row">
+        {% if submission.instance.status != 1 %}
+        <div class="col-auto">
+                <form action="{% url 'dockers:container_create' submission.pk %}" method="get">
+                {% csrf_token %}
+                <input type="submit" value="Create!">
+                </form>
+        </div>
+        {% else %}
+        <div class="col-auto">
+                <form action="{% url 'dockers:container_delete' submission.pk %}" method="get">
+                {% csrf_token %}
+                <input type="submit" value="Delete!">
+                </form>
+        </div>
+        {% endif %}
+    </div>
+
+    </div>
+</div>

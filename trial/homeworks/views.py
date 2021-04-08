@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.views import View
 from django.views.generic import ListView, UpdateView
+from django.views.generic.base import ContextMixin
 from django.contrib import messages
 
 from courses.models import Course, CourseMember
@@ -34,6 +35,7 @@ class TaskListView(ListView):
     def get_context_data(self, *args, object_list=None, **kwargs):
         context = super().get_context_data(*args, object_list=object_list, **kwargs)
         context['course_id'] = self.kwargs['course_id']
+        context['title'] = "Task List"
         return context
 
     def get(self, request, course_id):
@@ -45,10 +47,20 @@ class TaskListView(ListView):
         return super(TaskListView, self).get(self, request)
     
 
-class CreateTaskView(View):
+class CreateTaskView(View, ContextMixin):
+    template_name = "homeworks/task_create.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Create Task"
+        return context
+    
     def get(self, request, course_id):
-        form = TaskForm()
-        return render(request, "homeworks/task_create.html", {"form": form, 'course_id': course_id})
+        context = self.get_context_data()
+        context['form'] = TaskForm()
+        context['course_id'] = course_id
+        context['is_teacher'] = (CourseMember.get_highest_course_privilege(request.user.pk, course_id) < 2)
+        return render(request, self.template_name, context)
         
     def post(self, request, course_id):
         res, response = check_authenticated_and(request, CourseMember.is_teacher_of(request.user.pk, course_id), USER_NOT_AUTHORIZED)
@@ -65,10 +77,13 @@ class CreateTaskView(View):
             task.save()
             messages.info(request, "Create Task successfully")
             return redirect(reverse("courses:task_list", args=[course_id]))
-            
-        return render(request, "homeworks/task_create.html", {"form": form, 'course_id': course_id})
 
-class TaskDetailView(View):
+        context = self.get_context_data()
+        context['form'] = form
+        context['course_id'] = course_id
+        return render(request, self.template_name, {"form": form, 'course_id': course_id})
+
+class TaskDetailView(View, ContextMixin):
     """
     Display the detail of specific task
 
@@ -83,49 +98,83 @@ class TaskDetailView(View):
     """
     template_name = "homeworks/task_detail.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Task Detail"
+        return context
+
     def get(self, request, task_id):
         task = get_object_or_404(Task, pk=task_id)
         if request.user.is_authenticated and CourseMember.is_member_of(request.user.pk, task.course.pk):
             # User is member
             privilege = CourseMember.get_highest_course_privilege(request.user.pk, task.course.pk)
-            context = {}
+            context = self.get_context_data()
             context['task'] = task
             if privilege == 3:
                 # One and only one
                 try:
-                    submission = Submission.objects.get(task__pk=task_id, user__pk=request.user.pk)
+                    submission = Submission.objects.get(task__pk=task_id, submitter__pk=request.user.pk)
                     context['submission'] = submission
                 except Submission.DoesNotExist:
                     # submission = None
-                    context['to_submit'] = True
-                    context['task_id'] = task_id
-                    context['form'] = UploadFileForm()
-                    pass
-                except:
+                    submission = Submission(submitter=request.user, task=task)
+                    submission.save()
+                except Exception as e:
                     # More than one copy
-                    messages.error("More than one copy for {} in {}".format(request.user.pk, task_id))
+                    print(e)
+                    # messages.error("More than one copy for {} in {}".format(request.user.pk, task_id))
+                    raise e
+                finally:
+                    context['submission'] = submission
+                    try:
+                        file = submission.file
+                        print(file.name)
+                    except:
+                        context['to_submit'] = True
+                        context['form'] = UploadFileForm()
             else:
                 # link to submission list
                 context["is_teacher"] = True
-                context['task_id'] = task_id
+                context['']
             return render(request, self.template_name, context=context)
         return return_error(request, USER_NOT_AUTHENTICATED)
 
     def post(self, request, task_id):
+        context = self.get_context_data()
         task = get_object_or_404(Task, pk=task_id)
+
         if request.user.is_authenticated and CourseMember.is_student_of(request.user.pk, task.course.pk):
             try:
-                submission = Submission.objects.get(task__pk=task_id, user__pk=request.user.pk)
+                submission = Submission.objects.get(task__pk=task_id, submitter__pk=request.user.pk)
+                form = UploadFileForm(files=request.FILES)
+                if form.is_valid():
+                    file = form.save()
+                    submission.file = file
+                    submission.save()
+                    messages.info(request, "Successfully submit homework")
+                    return redirect(reverse("courses:task_detail", args=[task_id]))
+                messages.info(request, "Fail to validate form.")
+                context['form'] = form
+                print(form.errors)
+                return render(request, self.template_name, context=context)
             except Submission.DoesNotExist:
                 # Normal case
-                form = UploadFileForm(request.POST, request.FILES)
-                file = form.save()
-                submission = Submission(course=task.course, user=request.user, task=task, file=file)
-                submission.save()
-            except:
+                form = UploadFileForm(files=request.FILES)
+                if form.is_valid():
+                    file = form.save()
+                    submission = Submission(submitter=request.user, task=task, file=file)
+                    submission.save()
+                    messages.info(request, "Successfully submit homework")
+                    return redirect(reverse("courses:task_detail", args=[task_id]))
+                messages.info(request, "Fail to validate form.")
+                context['form'] = form
+                print(form.errors)
+                return render(request, self.template_name, context=context)
+            except Exception as e:
                 # More than one copy
+                print(e)
                 messages.error("More than one copy for {} in {}".format(request.user.pk, task_id))
-                return redirect(reverse("task_detail", args=[task_id]))
+                return redirect(reverse("courses:task_detail", args=[task_id]))
         return redirect(reverse("courses:task_detail", args=[task_id]))
 
 class SubmissionListView(ListView):
@@ -140,6 +189,7 @@ class SubmissionListView(ListView):
 
     def get_context_data(self, *args, object_list=None, **kwargs):
         context = super().get_context_data(*args, object_list=object_list, **kwargs)
+        context['title'] = "Submission List"
         context['task_id'] = self.kwargs['task_id']
         return context
 
@@ -166,6 +216,7 @@ class SubmissionCommentUpdateView(UpdateView):
         file_id = self.object.file.pk
 
         context['submission_id'] = submission_id
+        context['title'] = "Comment Submission"
         # context['file_download_url'] = download_link
         context['file_id'] = file_id
         return context
@@ -193,6 +244,7 @@ class TaskUpdateView(UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['task_id'] = self.object.pk
+        context['title'] = "Task Update"
 
         return context
 

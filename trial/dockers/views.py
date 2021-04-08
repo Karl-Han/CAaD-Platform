@@ -10,6 +10,7 @@ from utils.params import DOCKER_BASE_URL
 from .models import Image
 from utils.general import error_not_authenticated, return_error, info
 from homeworks.models import Submission
+from utils.general import get_referer
 
 class UploadDockerfileView(View):
     template_name = "dockers/dockerfile_upload.html"
@@ -71,9 +72,10 @@ def createContainer(request, submission_id):
         container_id, port_server = image.run_new_container(submission_id)
         print("container({}): port({})".format(container_id, port_server))
     else:
-        return info(request, "No dockerfile for task({})".format(task.pk), reverse("dockers:containerStatus", args=[submission_id]))
+        return info(request, "No built image for task({})".format(task.pk), reverse("dockers:containerStatus", args=[submission_id]))
 
-    return redirect(reverse("dockers:container_status", args=[submission_id]))
+    return redirect(get_referer(request))
+    # return redirect(reverse("dockers:container_status", args=[submission_id]))
 
 def deleteContainer(request, submission_id):
     # Delete container for specific user in submission
@@ -86,4 +88,5 @@ def deleteContainer(request, submission_id):
     except:
         return info(request, "No instance for submission({})".format(submission.pk), reverse("dockers:containerStatus", args=[submission_id]))
 
-    return redirect(reverse("dockers:container_status", args=[submission_id]))
+    return redirect(get_referer(request))
+    # return redirect(reverse("dockers:container_status", args=[submission_id]))

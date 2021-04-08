@@ -75,13 +75,13 @@ class Image(models.Model):
         # Finally record this container
         instance = Instance(container_id=container.id, image=self, 
             port_local=self.port_open, port_server=port_server,
-            submission=submission)
+            submission=submission, status=1)
         instance.save()
         return container.id, port_server
 
 
 class Instance(models.Model):
-    # CONTAINER_STATUS = [ (0, 'creating'), (1, 'running'), (2, 'stopped'), (3, 'deleted')]
+    CONTAINER_STATUS = [ (0, 'creating'), (1, 'running'), (2, 'stopped'), (3, 'deleted')]
 
     container_id = models.CharField('container id', max_length=64)
     port_local = models.IntegerField('port open in container')
@@ -89,7 +89,7 @@ class Instance(models.Model):
 
     create_date = models.DateTimeField('date created', default=timezone.now())
     update_date = models.DateTimeField('date last update', default=timezone.now())
-    # status = models.IntegerField('container status', choices=CONTAINER_STATUS)
+    status = models.IntegerField('container status', choices=CONTAINER_STATUS)
 
     image = models.ForeignKey(Image, on_delete=models.CASCADE)
     submission = models.OneToOneField(Submission, on_delete=models.CASCADE, related_name="instance")
@@ -123,5 +123,8 @@ def update_image_status(sender, **kwargs):
         if instance.status == 2:
             print("Building image")
             status = instance.image.build_image()
+            if status:
+                instance.task.have_docker = True
+                instance.task.save()
 
     return status

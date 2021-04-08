@@ -1,0 +1,10 @@
+<div class="card-body col-6">
+    <h5 class="card-title">Homework File Upload</h5>
+    <div class="card-text">
+        <form action="{% url 'courses:task_detail' task.pk%}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="file" required="" id="{{ form.file.id_for_label">
+            <input type="submit" value="Submit" class="mt-3">
+        </form>
+    </div>
+</div>

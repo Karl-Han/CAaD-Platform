@@ -2,49 +2,92 @@
 
 {% block content %}
 
-<p>Title: {{ task.title }}</p>
-<p>Course: {{ task.course.name }}</p>
-<p>Descrition: {{ task.description }}</p>
-<p>Tips: {{ task.tips }}</p>
-<p>Status: {{ task.status }}</p>
-<p>Created Date: {{ task.create_date }}</p>
-<p>Close Date: {{ task.close_date }}</p>
-
-<br>
-
-{% if submission %}
-Already got submission.
-Details: 
-File name: {{ submission.file.name}}
-Status: {{ submission.status }}
-Commit Date: {{ submission.commit_date }}
-Score: 
-    {% if submission.score %}
-    submission.score
-    {% else %}
-    <p style='color=red'>Not given yet.</p>
-    {% endif %}
-
-Operations:
-<a href="{% url 'files:download' submission.file.pk %}" target="_blank">Download</a>
-<a href="{% url 'files:delete' submission.file.pk %}" target="_blank">Delete</a>
-Refresh the page after deletion.
-{% endif %}
-
-{% if to_submit %}
-Please upload your file.
-<form action="{% url 'courses:task_detail' task_id %}" method="post" enctype="multipart/form-data">
-{% csrf_token %}
-{{ form.as_p }}
-<input type="submit" value="Submit">
-</form>
-
-{% endif %}
+<h2>Information</h2>
+<table class="table table-borderless">
+    <tr>
+        <td>Title</td>
+        <td>{{ task.title }}</td>
+    </tr>
+    <tr>
+        <td>Course</td>
+        <td>{{ task.course.name }}</td>
+    </tr>
+    <tr>
+        <td>Description</td>
+        <td>{{ task.description }}</td>
+    </tr>
+    <tr>
+        <td>Tips</td>
+        <td>{{ task.tips }}</td>
+    </tr>
+    <tr>
+        <td>Status</td>
+        <td>{{ task.status}}</td>
+    </tr>
+    <tr>
+        <td>Created Date</td>
+        <td>{{ task.create_date }}</td>
+    </tr>
+    <tr>
+        <td>Close Date</td>
+        <td>{{ task.close_date}}</td>
+    </tr>
+</table>
 
 {% if is_teacher %}
-<a href="{% url 'courses:task_update' task_id %}">Update Task</a>
-<a href="{% url 'courses:submission_list' task_id %}">Submission List</a>
+<div class="row m-3">
+    <div class="m-1 col-3">
+        <a href="{% url 'courses:task_update' task.pk %}" class="btn btn-primary" style="width: auto">Update Task</a>
+    </div>
 
+    <div class="m-1 col-3">
+        <a href="{% url 'courses:submission_list' task.pk %}" class="btn btn-primary" style="width: auto">Submission List</a>
+    </div>
+</div>
 {% endif %}
+
+<div class="row">
+{% if to_submit %}
+    {% include "homeworks/includes/upload_homeworkfile_form.html" %}
+{% else %}
+<h2>Uploaded file Details:</h2>
+<table class="table table-borderless">
+    <tr>
+        <td>Filename</td>
+        <td>{{ submission.file.name }}</td>
+    </tr>
+    <tr>
+        <td>Status</td>
+        <td>{{ submission.status}}</td>
+    </tr>
+    <tr>
+        <td>Commit Date</td>
+        <td>{{ submission.commit_date }}</td>
+    </tr>
+    <tr>
+        <td>Score</td>
+        <td>
+        {% if submission.score %}
+            submission.score
+        {% else %}
+            <div style='color=red'>Not given yet.</div>
+        {% endif %}
+        </td>
+    </tr>
+    <tr>
+    <td>Operations</td>
+    <td>
+        <a href="{% url 'files:download' submission.file.pk %}" target="_blank">Download</a>
+        <a href="{% url 'files:delete' submission.file.pk %}" target="_blank">Delete</a>
+    </td>
+    </tr>
+</table>
+<p>Refresh the page after deletion.</p>
+{% endif %}
+{% if task.have_docker %}
+    {% include "dockers/includes/container_status.html" %}
+{% endif %}
+</div>
+
 
 {% endblock content %}
