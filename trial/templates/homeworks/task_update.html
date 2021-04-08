@@ -3,9 +3,86 @@
 {% block content %}
 
 <form action="{% url 'courses:task_update' task_id %}" method="post">
-{% csrf_token %}
-{{ form.as_p }}
-<input type="submit" value="Update">
+    {% if form.non_field_errors %}
+        <div class="row text-danger">
+            <p>Errors occur:</p>
+            {{ form.non_field_errors.as_ul }}
+        </div>
+    {% endif %}
+    {% csrf_token %}
+
+    <table class="table table-borderless">
+        <tr>
+            <td>
+                <label for="{{ form.title.id_for_label }}">
+                    Title
+                </label>
+            </td>
+            <td>
+                {{ form.title }}
+            </td>
+            <td>{{ form.title.errors }}</td>
+        </tr>
+        <tr>
+            <td>
+                <label for="{{ form.description.id_for_label }}">
+                   Description 
+                </label>
+            </td>
+            <td>
+                {{ form.description }}
+            </td>
+            <td>{{ form.description.errors }}</td>
+        </tr>
+        <tr>
+            <td>
+                <label for="{{ form.tips.id_for_label }}">
+                    Tips
+                </label>
+            </td>
+            <td>
+                {{ form.tips }}
+            </td>
+            <td>{{ form.tips.errors }}</td>
+        </tr>
+        <tr>
+            <td>
+                <label for="{{ form.answer.id_for_label }}">
+                    Answer
+                </label>
+            </td>
+            <td>
+                {{ form.answer }}
+            </td>
+            <td>{{ form.answer.errors }}</td>
+        </tr>
+        <tr>
+            <td>
+                <label for="{{ form.status.id_for_label }}">
+                    Status
+                </label>
+            </td>
+            <td>
+                {{ form.status }}
+            </td>
+            <td>{{ form.status.errors }}</td>
+        </tr>
+        <tr>
+            <td>
+                <label for="{{ form.close_date.id_for_label }}">
+                    Date to close
+                </label>
+            </td>
+            <td>
+                {{ form.close_date }}
+            </td>
+            <td>{{ form.close_date.errors }}</td>
+        </tr>
+    </table>
+
+<div class="offset-5">
+    <input type="submit" value="Update">
+</div>
 </form>
 
 {% endblock content %}
