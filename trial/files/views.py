@@ -7,14 +7,9 @@ from django.contrib import messages
 
 from users.models import User
 from courses.models import Course, CourseMember
+from utils.general import info
 from .models import SubmissionFile
 from .forms import UploadFileForm
-
-# class FileCreateView(CreateView):
-#     model = SubmissionFile
-#     fields = ["file"]
-#     template_name = "files/file_create.html"
-#     success_url = '/'
 
 class TestUploadFileFormView(View):
     template_name = "files/create.html"
@@ -35,6 +30,5 @@ def downloadFile(request, file_id):
 
 def deleteFile(request, file_id):
     file = get_object_or_404(SubmissionFile, pk=file_id)
-    url = file.delete()
-    file.save()
-    return HttpResponse("Successfully deleted {}".format(file_id))
+    file.delete()
+    return info(request, "Successfully deleted {}".format(file_id))

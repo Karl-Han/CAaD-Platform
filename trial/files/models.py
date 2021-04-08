@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.http import FileResponse, Http404
 
 import time
+import os
 
 from trial.views import logger
 from .rfields import RestrictedFileField
@@ -27,19 +28,23 @@ class SubmissionFile(File):
             self.file_hash = hash(self.file.chunks())
             self.file.open()
             self.name = self.file.name
-            self.content_type = self.file.content_type
 
         super().save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
     def get_local_path(self):
         return self.file.path
+    
+    def delete(self, using=None, keep_parents=False):
+        path = self.get_local_path()
+        os.remove(path)
+        return super().delete(using=using, keep_parents=keep_parents)
 
     @classmethod
     def get_file_response(cls, file_id):
         try:
             obj = cls.objects.get(pk=file_id)
             path = obj.get_local_path()
-            response = FileResponse(open(path, "rb"))
+            response = FileResponse(open(path, "rb"), filename=obj.name)
             return response
         except cls.DoesNotExist:
             logger.error("No such file")
