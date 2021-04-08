@@ -59,8 +59,21 @@
             </li>
             {% block navigation %}
             <li class="nav-item">
-                <a class="nav-link" href='{% url "home" %}'>Fill in navigation block</a>
+                <a class="nav-link" href='{% url "courses:studying_list_my" %}'>My Studying</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href='{% url "courses:tasks_list_my" %}'>My Tasks</a>
+            </li>
+
+            {% if user.is_staff %}
+            <li class="nav-item">
+                <a class="nav-link" href='{% url "courses:teaching_list_my" %}'>My Teaching</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href='{% url "admin:index" %}'>Administration</a>
+            </li>
+            {% endif %}
+
             {% comment %} <li class="nav-item"><a class="nav-link" href="#">SVN</a></li>
             <li class="nav-item dropdown btn-group">
                 <a href="#" class="nav-link dropdown-toggle" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
@@ -157,6 +170,5 @@
 <script src="" async defer>
 {% block script %}{% endblock script %}
 </script>
-
     </body>
 </html>

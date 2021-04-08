@@ -1,0 +1,65 @@
+{% extends 'generics/base.html' %}
+
+{% block content %}
+
+<div class="container mt-2">
+<table class="table">
+<thead>
+    <tr>
+    <th scope="col">Course</th>
+    <th scope="col">Task</th>
+    <th scope="col">Status</th>
+    <th scope="col">Link</th>
+    </tr>
+</thead>
+
+{% for task in task_list %}
+    <tr>
+        <td>
+            {{ task.course.name }}
+        </td>
+        <td>
+            {{ task.title }}
+        </td>
+        <td>
+            {% if task.status == 0 %}
+            Draft
+            {% elif task.status == 1 %}
+            Running
+            {% else %}
+            Closed
+            {% endif %}
+        </td>
+        <td>
+            <a href="{% url 'courses:task_detail' task.pk %}">
+                Go!
+            </a>
+        </td>
+    </tr>
+{% endfor %}
+</table>
+</div>
+
+{% if page_obj %}
+<nav aria-label="Page navigation example">
+<ul class="pagination d-flex justify-content-center m-3">
+    {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% else %}
+        <li class="page-item"><a class="page-link disabled" href="#" disabled>Previous</a></li>
+    {% endif %}
+    {% for object in page_obj.paginator.page_range %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ forloop.counter }}">{{ forloop.counter }}</a>
+        </li>
+    {% endfor %}
+    {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+        {% else %}
+        <li class="page-item"><a class="page-link disabled" href="#" disabled>Next</a></li>
+    {% endif %}
+</ul>
+</nav>
+{% endif %}
+
+{% endblock content %}

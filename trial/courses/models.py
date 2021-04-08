@@ -41,7 +41,7 @@ class Course(models.Model):
             * list(course_id)
         """
         member_record = CourseMember.objects.filter(user=user)
-        member_teacher = member_record.filter(Q(type = 0) | Q(type = 1))
+        member_teacher = member_record.filter(Q(type = 0) | Q(type = 1) | Q(type = 2))
         teacher_list = []
 
         for member in member_teacher:
@@ -49,6 +49,25 @@ class Course(models.Model):
                 teacher_list.append(member.course.pk)
 
         return teacher_list
+    @classmethod
+    def get_all_student_courses(cls, user):
+        """
+        Get all the id of courses which user is student
+
+        Input:
+            * self: the user
+        Output:
+            * list(course_id)
+        """
+        member_record = CourseMember.objects.filter(user=user)
+        member_teacher = member_record.filter(type = 3)
+        student_list = []
+
+        for member in member_teacher:
+            if member.course.pk not in student_list:
+                student_list.append(member.course.pk)
+
+        return student_list
 
 
 

@@ -1,17 +1,20 @@
 .header {
-    background-color: blue;
+    /* background-color: #87bdd8; */
 }
 
 .logo {
-    background-color: lightpink;
+    /* background-color: lightpink; */
+    background-color: #87bdd8;
 }
 
 .user {
-    background-color: lightsalmon;
+    /* background-color: lightsalmon; */
+    background-color: #87bdd8;
 }
 
 .title {
-    background-color: lightgray;
+    /* background-color: lightgray; */
+    background-color: #b7d7e8;
 }
 
 #body {
@@ -19,11 +22,16 @@
 }
 
 .navi {
-    background-color: lightblue;
+    background-color: #b7d7e8;
+}
+
+.nav-link {
+    padding-left: 0;
+    padding-top: 10px;
 }
 
 .content {
-    background-color: gray;
+    background-color: #cfe0e8;
     border-top: 10px;
 }
 

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import views, views_my
 import homeworks.views as homework_views
 
 app_name = 'courses'
@@ -11,6 +11,11 @@ urlpatterns = [
     path('<int:course_id>', views.homepage, name='course_homepage'),
     path('<int:pk>/edit', views.EditcourseView.as_view(), name='course_edit'),
     path('<int:course_id>/join', views.joinCourse, name='course_join'),
+
+    # My* Views
+    path('myTeaching', views_my.MyTeachingCourseListView.as_view(), name='teaching_list_my'),
+    path('myStudying', views_my.MyStudyingCourseListView.as_view(), name='studying_list_my'),
+    path('myTasks', views_my.MyTasksListView.as_view(), name='tasks_list_my'),
 
     # Member management
     path('<int:course_id>/students', views.StudentsListView.as_view(), name='students_manage'),
