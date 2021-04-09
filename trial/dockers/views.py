@@ -2,6 +2,7 @@ from django.core.exceptions import PermissionDenied
 from django.views import View
 from django.contrib import messages
 from django.shortcuts import render, get_object_or_404, reverse, redirect
+from django.views.generic.base import ContextMixin
 
 from homeworks.models import Task
 from files.forms import UploadDockerfileForm
@@ -12,12 +13,23 @@ from utils.general import error_not_authenticated, return_error, info
 from homeworks.models import Submission
 from utils.general import get_referer
 
-class UploadDockerfileView(View):
+class UploadDockerfileView(View, ContextMixin):
     template_name = "dockers/dockerfile_upload.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Upload Dockerfile"
+        return context
+
+
     def get(self, request, task_id):
-        form = UploadDockerfileForm()
-        return render(request, self.template_name, {"form": form, "task_id": task_id})
+        context = self.get_context_data()
+        task = get_object_or_404(Task, pk=task_id)
+
+        context['form'] = UploadDockerfileForm()
+        context['task'] = task
+        return render(request, self.template_name, context)
+
 
     def post(self, request, task_id):
         form = UploadDockerfileForm(request.POST, request.FILES)
@@ -25,8 +37,9 @@ class UploadDockerfileView(View):
 
         if form.is_valid():
             # Save dockerfile
+            data = form.cleaned_data
             dockerfile = DockerFile(
-                file = form.cleaned_data['file']
+                file = data['file']
             )
             dockerfile.save()
 
@@ -37,10 +50,17 @@ class UploadDockerfileView(View):
                 task = task
             )
             image.save()
-            image.task.have_docker = True
-            image.task.save()
+
+            # Update task dockerfile
+            task.have_docker = True
+            task.dockerfile = dockerfile
+            task.save()
+
             messages.info(request, "Successfully Upload Dockerfile zip")
-        return render(request, self.template_name, {"form": form})
+        context = self.get_context_data()
+        context['form'] = form
+        context['task'] = task 
+        return render(request, self.template_name, context)
 
 def containerStatus(request, submission_id):
     # Render status of container in submission for user

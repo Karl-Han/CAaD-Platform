@@ -40,5 +40,5 @@ class InstanceAdmin(admin.ModelAdmin):
             )
         }),
     )
-    def part_of_id(self):
-        return self.container_id[:5]
+    def part_of_id(self, obj):
+        return obj.container_id[:7]

@@ -9,15 +9,24 @@ import docker
 from Crypto.Hash import SHA3_256
 
 from utils.params import DOCKER_BASE_URL
+from trial.views import logger
 
 # from files.models import FileDocker
 
 def unzip(file_path, dst):
+    print(file_path)
     if zipfile.is_zipfile(file_path):
         with zipfile.ZipFile(file_path, 'r') as zip_ref:
             if 'Dockerfile' in zip_ref.namelist():
                 zip_ref.extractall(dst)
                 return True
+            else:
+                print(zip_ref.namelist())
+                logger.error("Dockerfile not in zipfile".format(file_path))
+                return False
+
+    else:
+        logger.error("{} is not a zipfile".format(file_path))
     return False
 
 def get_rand_available_port():

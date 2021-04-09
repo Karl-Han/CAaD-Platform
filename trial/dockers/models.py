@@ -13,6 +13,7 @@ import time
 from files.models import DockerFile
 from homeworks.models import Task, Submission
 from utils.params import DOCKER_BASE_URL
+from trial.views import logger
 from .utils import unzip, get_docker_client, get_rand_available_port
 
 class Image(models.Model):
@@ -31,7 +32,8 @@ class Image(models.Model):
         else:
             shutil.rmtree(dst)
             os.makedirs(dst)
-        unzip(file_path, dst)
+        if not unzip(file_path, dst):
+            raise Exception("Error when extrating {}".format(file_path))
 
         client = get_docker_client()
         res = []
@@ -43,10 +45,10 @@ class Image(models.Model):
         except Exception as e:
             print("Error: {}".format(e))
 
-        if not 'Successful' in str(res[-1]) and not 'cache' in str(res[-2]):
-            # Clean the build and stop
-            print("".join(res))
-            raise Exception("Error when building image.")
+        # if not 'Successful' in str(res[-1]) and not 'cache' in str(res[-2]):
+        #     # Clean the build and stop
+        #     print("".join(res))
+        #     raise Exception("Error when building image.")
 
         # Successfully built
         self.image_id = str(self.task.pk)
