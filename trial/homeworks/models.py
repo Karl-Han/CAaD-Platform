@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.http import FileResponse
 
 from courses.models import Course
-from files.models import SubmissionFile
+from files.models import SubmissionFile, DockerFile
 
 class Task(models.Model):
     TASK_STATUS = [(0, 'draft'), (1, 'running'), (2, 'closed')]
@@ -16,6 +16,8 @@ class Task(models.Model):
     tips = models.CharField('tips', max_length=1024, blank=True)
     answer = models.CharField('answer', max_length=1024, blank=True)
     have_docker = models.BooleanField("have docker experiment", default=False)
+    dockerfile = models.OneToOneField(DockerFile, on_delete=models.SET_NULL, blank=True, null=True)
+    auxiliary_file = models.OneToOneField(SubmissionFile, on_delete=models.SET_NULL, blank=True, null=True)
 
     # status info
     status = models.IntegerField(
@@ -44,7 +46,7 @@ class Submission(models.Model):
     # course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="submissions", null=True)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="submissions", null=True)
     submitter = models.ForeignKey(User, on_delete=models.CASCADE, related_name="submissions", null=True)
-    file = models.OneToOneField(SubmissionFile, on_delete=models.CASCADE, null=True, blank=True, related_name="submission")
+    file = models.OneToOneField(SubmissionFile, on_delete=models.SET_NULL, null=True, blank=True, related_name="submission")
 
     def get_file_response(self):
         path = self.file.get_local_path()

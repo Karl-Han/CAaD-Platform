@@ -22,12 +22,16 @@ class File(models.Model):
 class SubmissionFile(File):
     file = RestrictedFileField(upload_to=UploadToPathAndRename("submission/" + time.strftime("%Y/%m/%d")), max_length=100, max_upload_size=5242880, 
             content_types=['application/pdf', 'application/excel', 'application/msword', 'text/plain', 'text/csv', 'application/zip', 'image/jpeg', 'image/gif'])
+    
+    def __str__(self):
+        return "SubmissionFile({}, {})".format(self.pk, self.name)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if self.pk is None:
             self.file_hash = hash(self.file.chunks())
             self.file.open()
             self.name = self.file.name
+        print(self)
 
         super().save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
@@ -53,7 +57,7 @@ class SubmissionFile(File):
 class DockerFile(File):
     DOCKERFILE_STATUS = [(1, "To be review"), (2, "Reviewed"), (3, "Image built")]
 
-    file = RestrictedFileField(upload_to=UploadToPathAndRename("dockerfile/" + time.strftime("%Y/%m/%d")), max_length=100, max_upload_size=5242880, 
+    file = RestrictedFileField(upload_to=UploadToPathAndRename("dockerfile/" + time.strftime("%Y/%m/%d")), max_length=200, max_upload_size=5242880, 
             content_types=['application/zip'])
     status = models.IntegerField("dockerfile review status", choices=DOCKERFILE_STATUS, default=1)
 

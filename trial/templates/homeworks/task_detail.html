@@ -14,15 +14,23 @@
     </tr>
     <tr>
         <td>Description</td>
-        <td>{{ task.description }}</td>
+        <td>{{ task.description|default:"N/A" }}</td>
     </tr>
     <tr>
         <td>Tips</td>
-        <td>{{ task.tips }}</td>
+        <td>{{ task.tips|default:"N/A" }}</td>
     </tr>
     <tr>
         <td>Status</td>
-        <td>{{ task.status}}</td>
+        <td>
+        {% if task.status == 0 %}
+        Draft
+        {% elif task.status == 1 %}
+        Running
+        {% else %}
+        Closed
+        {% endif %}
+        </td>
     </tr>
     <tr>
         <td>Created Date</td>
@@ -32,16 +40,28 @@
         <td>Close Date</td>
         <td>{{ task.close_date}}</td>
     </tr>
+    {% if task.auxiliary_file %}
+    <tr>
+        <td>Auxiliary File</td>
+        <td>
+        <a href="{% url 'files:download' task.auxiliary_file.pk %}">Download</a>
+        </td>
+    </tr>
+    {% endif %}
 </table>
 
 {% if is_teacher %}
-<div class="row m-3">
-    <div class="m-1 col-3">
+<div class="row mt-3">
+    <div class="m-1 col-2">
         <a href="{% url 'courses:task_update' task.pk %}" class="btn btn-primary" style="width: auto">Update Task</a>
     </div>
 
-    <div class="m-1 col-3">
+    <div class="m-1 col-2">
         <a href="{% url 'courses:submission_list' task.pk %}" class="btn btn-primary" style="width: auto">Submission List</a>
+    </div>
+
+    <div class="m-1 col-2">
+        <a href="{% url 'dockers:dockerfile_upload' task.pk %}" class="btn btn-primary" style="width: auto">Upload Experiment</a>
     </div>
 </div>
 {% else %}

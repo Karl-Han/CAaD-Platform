@@ -237,7 +237,7 @@ class SubmissionCommentUpdateView(UpdateView):
 
 class TaskUpdateView(UpdateView):
     model = Task
-    fields = ["title", "description", "tips", "answer", "status", "close_date"]
+    fields = ["title", "description", "tips", "answer", "status", "close_date", "auxiliary_file"]
     # To be change
     success_url = "/"
     template_name = "homeworks/task_update.html"
@@ -248,6 +248,7 @@ class TaskUpdateView(UpdateView):
         context['title'] = "Task Update"
 
         return context
+
 
     def form_valid(self, form):
         self.success_url = reverse("courses:task_detail", args=[self.object.pk])

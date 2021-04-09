@@ -12,7 +12,7 @@ class TaskAdmin(admin.ModelAdmin):
     fieldsets = (
         ("Main information", {
             "fields": (
-                'title', 'course', "creator"
+                'title', 'course', "creator", "dockerfile"
             ),
         }),
         ("Extra information", {
