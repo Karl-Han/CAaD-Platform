@@ -229,7 +229,7 @@ class SubmissionCommentUpdateView(UpdateView):
         return score
 
     def form_valid(self, form):
-        self.success_url = reverse("submission_list", args=[self.object.task.pk])
+        self.success_url = reverse("courses:submission_list", args=[self.object.task.pk])
         return super().form_valid(form)
 
     def get(self, request, *args, **kwargs):

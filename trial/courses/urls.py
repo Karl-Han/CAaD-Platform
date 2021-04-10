@@ -6,6 +6,7 @@ import homeworks.views as homework_views
 app_name = 'courses'
 urlpatterns = [
     # Basic operation
+    path('', views.IndexListView.as_view(), name='index'),
     path('', views.IndexListView.as_view(), name='course_list'),
     path('create', views.CreatecourseView.as_view(), name='course_create'),
     path('<int:course_id>', views.homepage, name='course_homepage'),

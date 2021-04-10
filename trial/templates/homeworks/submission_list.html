@@ -2,27 +2,36 @@
 
 {% block content %}
 
-<table>
+<div class="col-8 d-flex justify-content-center mt-3">
+<table class="table">
+
 <tr>
-<th>User</th>
-<th>Status</th>
-<th>Commit Date</th>
-<th>Score</th>
-<th>Comment</th>
+    <th>User</th>
+    <th>Status</th>
+    <th>Commit Date</th>
+    <th>Score</th>
+    <th>Comment</th>
+    <th>Option</th>
 </tr>
 
 <tr>
 {% for submission in submission_list %}
 
-<td>{{ submission.user.username }}</td>
-<td>{{ submission.status }}</td>
-<td>{{ submission.commit_date }}</td>
-<td>{{ submission.score }}</td>
-<td>{{ submission.comment }}</td>
+    <td>
+        <a href="{% url 'users:profile' submission.submitter.pk %}">{{ submission.submitter.username }}</a>
+    </td>
+    <td>{{ submission.status }}</td>
+    <td>{{ submission.commit_date }}</td>
+    <td>{{ submission.score }}</td>
+    <td>{{ submission.comment }}</td>
+    <td>
+    <a href="{% url 'courses:submission_comment' submission.pk %}">Review</a>
+    </td>
 
 {% endfor %}
 </tr>
 
 </table>
+</div>
 
 {% endblock content %}

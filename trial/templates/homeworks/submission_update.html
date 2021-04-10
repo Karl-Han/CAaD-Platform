@@ -3,10 +3,34 @@
 {% block content %}
 
 <form action="{% url 'courses:submission_comment' submission_id %}" method="post">
-{% csrf_token %}
-{{ form.as_p }}
-<p><a href="{% url 'files:download' file_id %}" _target="blank">Download</a></p>
-<input type="submit" value="Update">
+    {% if form.non_field_errors %}
+        <div class="row text-danger">
+            <p>Errors occur:</p>
+            {{ form.non_field_errors.as_ul }}
+        </div>
+    {% endif %}
+    {% csrf_token %}
+    <table class="table">
+    {% for field in form %}
+        <tr>
+            <td>
+                {{ field.label_tag }}
+            </td>
+            <td>
+                {{ field }}
+            </td>
+            <td>{{ field.errors }}</td>
+        </tr>
+    {% endfor %}
+
+        <tr>
+            <td>Submitted file</td>
+            <td>
+                <a href="{% url 'files:download' file_id %}" _target="blank">Download</a>
+            </td>
+        </tr>
+    </table>
+<input type="submit" value="Update" class="offset-3">
 </form>
 
 {% endblock content %}
