@@ -21,7 +21,6 @@ class UploadDockerfileView(View, ContextMixin):
         context["title"] = "Upload Dockerfile"
         return context
 
-
     def get(self, request, task_id):
         context = self.get_context_data()
         task = get_object_or_404(Task, pk=task_id)
@@ -29,7 +28,6 @@ class UploadDockerfileView(View, ContextMixin):
         context['form'] = UploadDockerfileForm()
         context['task'] = task
         return render(request, self.template_name, context)
-
 
     def post(self, request, task_id):
         form = UploadDockerfileForm(request.POST, request.FILES)

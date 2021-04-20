@@ -10,12 +10,14 @@ def hash(file):
         hasher = SHA3_256.new()
         if not isinstance(file, types.GeneratorType):
             hasher.update(file)
+            print("file is not a Generator")
         else:
             for chunk in file:
                 hasher.update(chunk)
+            print("file is a Generator")
         return str(hasher.digest())
 
-    raise IOError("No file hander")
+    raise IOError("No file handler")
 
 @deconstructible
 class UploadToPathAndRename(object):
@@ -23,13 +25,12 @@ class UploadToPathAndRename(object):
         self.sub_path = path
 
     def __call__(self, instance, filename):
-        ext = filename.split('.')[-1]
         # get filename
         if instance.file:
             # file exist
-            filename = hash(instance.file.read())
+            filename_new = hash(instance.file.read())
         else:
             logger.error("Unable to read file.")
             raise IOError("No such file in the instance") 
         # return the whole path to the file
-        return os.path.join(self.sub_path, filename)
+        return os.path.join(self.sub_path, filename_new)
