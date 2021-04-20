@@ -25,7 +25,11 @@
     <td>{{ submission.score }}</td>
     <td>{{ submission.comment }}</td>
     <td>
-    <a href="{% url 'courses:submission_comment' submission.pk %}">Review</a>
+    {% if submission.file %}
+        <a href="{% url 'courses:submission_comment' submission.pk %}">Review</a>
+    {% else %}
+        Not Available
+    {% endif %}
     </td>
 
 {% endfor %}

@@ -16,7 +16,7 @@ from files.forms import UploadFileForm
 import json
 import datetime
 
-from utils.general import return_error, check_authenticated_and
+from utils.general import return_error, check_authenticated_and, info
 from utils.status import *
 from .utils import SUBMISSION_STATUS
 
@@ -214,6 +214,7 @@ class SubmissionCommentUpdateView(UpdateView):
         context = super().get_context_data(**kwargs)
         submission_id = self.object.pk
         # download_link = self.object.get_download_url()
+        print(self.object.file)
         file_id = self.object.file.pk
 
         context['submission_id'] = submission_id
