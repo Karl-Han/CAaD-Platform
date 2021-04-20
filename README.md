@@ -8,14 +8,14 @@ Install Python3 environment in advance.
 ```shell
 # (Optional) If you want to use virtual environment and have installed virtualenv
 # Create virtual environment for project
-virtualenv venv
-source venv/bin/activate
+# virtualenv venv
+# source venv/bin/activate
 
 # Install necessary dependencies
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 # Need to install in order
-pip install pycrypto
-pip install pycryptodome
+pip3 install pycrypto
+pip3 install pycryptodome
 
 cd src
 # Do preparation for Django
