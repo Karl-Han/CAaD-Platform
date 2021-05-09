@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.views.generic import View, ListView, DetailView, UpdateView
 from django.views.generic.base import ContextMixin
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test, permission_required
 
 from users.models import User
 from utils.general import error_not_authenticated, return_error, info
@@ -11,32 +12,32 @@ from .forms import CreateCourseForm, JoinForm
 from courses.utils import *
 
 from .utils import getRandCPwd
+from utils.check import SetLoginRequiredMixin
 # from .signals import update_user_privilege_signal
 
-class IndexListView(ListView):
+class PlatformHomepageView(ListView):
     queryset = Course.objects.order_by('name').filter(is_open=True).all()
     paginate_by = 3
     context_object_name = "course_list"
     template_name = "courses/index.html"
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "Homepage"
         return context
     
 
-class CreatecourseView(View, ContextMixin):
+class CreateCourseView(SetLoginRequiredMixin, View, ContextMixin):
     template_name = 'courses/create.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "Create Course"
         return context
-    
 
     def get(self, request):
-        if not request.user.is_authenticated:
-            return error_not_authenticated(request)
-
+        # if not request.user.is_authenticated:
+        #     return error_not_authenticated(request)
         context = self.get_context_data()
         form = CreateCourseForm(creator=request.user)
         context['form'] = form
@@ -44,8 +45,8 @@ class CreatecourseView(View, ContextMixin):
         return render(request, self.template_name, context)
 
     def post(self, request):
-        if not request.user.is_authenticated:
-            error_not_authenticated(request)
+        # if not request.user.is_authenticated:
+        #     error_not_authenticated(request)
 
         # Create a course for him
         user = request.user
@@ -69,7 +70,7 @@ class CreatecourseView(View, ContextMixin):
             return info(request, "Successfully create course", redirect_to=reverse("courses:course_homepage", args=[obj.pk]))
         return return_error(request, FORM_NOT_VALID)
 
-def homepage(request, course_id):
+def course_homepage(request, course_id):
     course = get_object_or_404(Course, pk=course_id)
     user = request.user
     context = {}
@@ -97,7 +98,7 @@ def homepage(request, course_id):
     
     return render(request, "courses/homepage.html", context=context)
 
-class EditcourseView(UpdateView):
+class EditcourseView(SetLoginRequiredMixin, UpdateView):
     model = Course
     fields = ['name', 'password', 'description', 'is_open']
     success_url = "/"
@@ -116,13 +117,11 @@ class EditcourseView(UpdateView):
         self.success_url = reverse("courses:course_homepage", args=[self.object.pk])
         return super().form_valid(form)
 
+@login_required
 def joinCourse(request, course_id):
     if request.method != "POST":
         return info(request, "Wrong HTTP method for {}. POST only".format(request.path),
                 redirect_to=reverse("courses:course_homepage", args=[course_id]))
-
-    if not request.user.is_authenticated:
-        return error_not_authenticated(request)
 
     # Check password and join class
     form = JoinForm(request.POST)
@@ -133,7 +132,7 @@ def joinCourse(request, course_id):
             return info(request, "Successfully join as student.", reverse("courses:course_homepage", args=[course_id]))
     return return_error(request, FORM_NOT_VALID)
 
-class StudentsListView(ListView):
+class StudentsListView(SetLoginRequiredMixin, ListView):
     paginate_by = 10
     template_name = 'courses/students.html'
     context_object_name = 'student_list'
@@ -161,7 +160,7 @@ class StudentsListView(ListView):
         # self.object_list = self.object_list.filter(type__lt=CourseMember.get_course_privilege(request.user.pk, course_id))
         return super(StudentsListView, self).get(self, request)
 
-class ChangePrivilegeView(View, ContextMixin):
+class ChangePrivilegeView(SetLoginRequiredMixin, View, ContextMixin):
     template_name = "courses/student_detail.html"
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

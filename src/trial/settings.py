@@ -26,6 +26,7 @@ SECRET_KEY = '3+4^+v(luvi3g+ijrn7suebkk3(#=ra_(r2=6n5)be#xko)5&d'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 ALLOWED_HOSTS = []
 
 
@@ -129,6 +130,7 @@ LOGIN_REDIRECT_URL = '/users/login'
 
 STATIC_URL = '/static/'
 
+# STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
 
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',

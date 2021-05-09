@@ -57,7 +57,7 @@ class LoginView(View):
 
         context["form"] = form
         context["title"] = "Login"
-        request.session['referer'] = request.META.get('HTTP_REFERER', reverse("courses:index"))
+        request.session['referer'] = request.META.get('HTTP_REFERER', reverse("index"))
         return render(request, self.template_name, context)
 
     def post(self, request):
