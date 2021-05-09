@@ -1,5 +1,7 @@
 from django.contrib.auth.decorators import login_required, user_passes_test, permission_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+
+from courses.models import CourseMember
 
 # check_func(user) -> bool
 @login_required
@@ -20,3 +22,14 @@ def user_is_teacher(view_func):
 
 class SetLoginRequiredMixin(LoginRequiredMixin):
     login_url = "/login/"
+
+class CheckGreaterPrivilegeMixin(UserPassesTestMixin):
+    least_privilege = 3
+
+    def test_func(self):
+        if self.course_id == None:
+            raise Exception("course_id not set")
+        else:
+            print("Check {} least({}) in Course({})".format(self.request.user.pk, self.least_privilege, self.course_id))
+            return (CourseMember.get_highest_course_privilege(self.request.user.pk, self.course_id) <= self.least_privilege) | self.request.user.is_superuser
+        return False

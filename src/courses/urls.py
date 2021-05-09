@@ -9,7 +9,7 @@ urlpatterns = [
     # path('', views.PlatformHomepageView.as_view(), name='index'),
     path('create', views.CreateCourseView.as_view(), name='course_create'),
     path('<int:course_id>', views.course_homepage, name='course_homepage'),
-    path('<int:pk>/edit', views.EditcourseView.as_view(), name='course_edit'),
+    path('<int:pk>/edit', views.EditCourseView.as_view(), name='course_edit'),
     path('<int:course_id>/join', views.joinCourse, name='course_join'),
 
     # My* Views

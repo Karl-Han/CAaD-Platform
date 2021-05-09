@@ -4,6 +4,7 @@ from django.views.generic import View, ListView, DetailView, UpdateView
 from django.views.generic.base import ContextMixin
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test, permission_required
+from django.contrib.auth.mixins import UserPassesTestMixin
 
 from users.models import User
 from utils.general import error_not_authenticated, return_error, info
@@ -12,7 +13,8 @@ from .forms import CreateCourseForm, JoinForm
 from courses.utils import *
 
 from .utils import getRandCPwd
-from utils.check import SetLoginRequiredMixin
+from utils.check import SetLoginRequiredMixin, CheckGreaterPrivilegeMixin
+from utils.params import *
 # from .signals import update_user_privilege_signal
 
 class PlatformHomepageView(ListView):
@@ -70,6 +72,7 @@ class CreateCourseView(SetLoginRequiredMixin, View, ContextMixin):
             return info(request, "Successfully create course", redirect_to=reverse("courses:course_homepage", args=[obj.pk]))
         return return_error(request, FORM_NOT_VALID)
 
+
 def course_homepage(request, course_id):
     course = get_object_or_404(Course, pk=course_id)
     user = request.user
@@ -98,11 +101,17 @@ def course_homepage(request, course_id):
     
     return render(request, "courses/homepage.html", context=context)
 
-class EditcourseView(SetLoginRequiredMixin, UpdateView):
+
+class EditCourseView(SetLoginRequiredMixin, CheckGreaterPrivilegeMixin, UpdateView):
     model = Course
     fields = ['name', 'password', 'description', 'is_open']
-    success_url = "/"
+    # success_url = "/"
     template_name = "courses/update.html"
+    least_privilege = COURSEMEMBER_ADMIN
+
+    def dispatch(self, request, *args, **kwargs):
+        self.course_id = kwargs["pk"]
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -116,6 +125,7 @@ class EditcourseView(SetLoginRequiredMixin, UpdateView):
             self.object.save()
         self.success_url = reverse("courses:course_homepage", args=[self.object.pk])
         return super().form_valid(form)
+
 
 @login_required
 def joinCourse(request, course_id):
@@ -132,10 +142,16 @@ def joinCourse(request, course_id):
             return info(request, "Successfully join as student.", reverse("courses:course_homepage", args=[course_id]))
     return return_error(request, FORM_NOT_VALID)
 
-class StudentsListView(SetLoginRequiredMixin, ListView):
+
+class StudentsListView(SetLoginRequiredMixin, CheckGreaterPrivilegeMixin, ListView):
     paginate_by = 10
     template_name = 'courses/students.html'
     context_object_name = 'student_list'
+    least_privilege = COURSEMEMBER_TEACHER
+
+    def dispatch(self, request, *args, **kwargs):
+        self.course_id = kwargs["course_id"]
+        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         user = self.request.user
@@ -153,20 +169,18 @@ class StudentsListView(SetLoginRequiredMixin, ListView):
         if not request.user.is_authenticated:
             return error_not_authenticated(request)
 
-        if not CourseMember.is_teacher_of(request.user.pk, course_id):
-            return return_error(USER_NOT_AUTHORIZED)
-
         # Authorized user
         # self.object_list = self.object_list.filter(type__lt=CourseMember.get_course_privilege(request.user.pk, course_id))
         return super(StudentsListView, self).get(self, request)
 
-class ChangePrivilegeView(SetLoginRequiredMixin, View, ContextMixin):
+
+class ChangePrivilegeView(SetLoginRequiredMixin, ContextMixin, View):
     template_name = "courses/student_detail.html"
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "Change Member Privilege"
         return context
-    
 
     def get(self, request, member_record):
         course = get_object_or_404(CourseMember, pk=member_record).course
