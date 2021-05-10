@@ -12,7 +12,7 @@ from utils.general import info, get_referer
 from .models import SubmissionFile
 from .forms import UploadFileForm
 
-class TestUploadFileFormView(View, ContextMixin):
+class TestUploadFileFormView(ContextMixin, View):
     template_name = "files/upload.html"
     extra_context = {"title": "Submission File upload"}
 

@@ -18,37 +18,44 @@ import datetime
 
 from utils.general import return_error, check_authenticated_and, info
 from utils.status import *
+from utils.check import SetLoginRequiredMixin, CheckGreaterPrivilegeMixin
+from utils.params import *
 from .utils import SUBMISSION_STATUS
 
-class TaskListView(ListView):
+class TaskListView(CheckGreaterPrivilegeMixin, ListView):
     """
     List all the tasks in the same course
     """
+    least_privilege = COURSEMEMBER_STUDENT
     paginate_by = 10
     template_name = 'homeworks/task_list.html'
     context_object_name = 'task_list'
 
+    def dispatch(self, request, *args, **kwargs):
+        self.course_id = kwargs["course_id"]
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
-        course_id = self.kwargs['course_id']
+        course_id = self.course_id
         return Task.objects.filter(course__pk=course_id)
 
     def get_context_data(self, *args, object_list=None, **kwargs):
         context = super().get_context_data(*args, object_list=object_list, **kwargs)
-        context['course_id'] = self.kwargs['course_id']
+        context['course_id'] = self.course_id
         context['title'] = "Task List"
         context['is_teacher'] = (CourseMember.get_highest_course_privilege(self.request.user.pk, context['course_id']) < 2)
         return context
 
-    def get(self, request, course_id):
-        res, response = check_authenticated_and(request, CourseMember.is_member_of(request.user.pk, course_id), USER_NOT_AUTHORIZED)
-        if res == False:
-            return response
+    # def get(self, request, course_id):
+    #     res, response = check_authenticated_and(request, CourseMember.is_member_of(request.user.pk, course_id), USER_NOT_AUTHORIZED)
+    #     if res == False:
+    #         return response
 
-        # Authorized user
-        return super(TaskListView, self).get(self, request)
+    #     # Authorized user
+    #     return super(TaskListView, self).get(self, request)
     
 
-class CreateTaskView(View, ContextMixin):
+class CreateTaskView(SetLoginRequiredMixin, ContextMixin, View):
     template_name = "homeworks/task_create.html"
 
     def get_context_data(self, **kwargs):
@@ -84,7 +91,7 @@ class CreateTaskView(View, ContextMixin):
         context['course_id'] = course_id
         return render(request, self.template_name, {"form": form, 'course_id': course_id})
 
-class TaskDetailView(View, ContextMixin):
+class TaskDetailView(SetLoginRequiredMixin, ContextMixin, View):
     """
     Display the detail of specific task
 
@@ -178,20 +185,28 @@ class TaskDetailView(View, ContextMixin):
                 return redirect(reverse("courses:task_detail", args=[task_id]))
         return redirect(reverse("courses:task_detail", args=[task_id]))
 
-class SubmissionListView(ListView):
+class SubmissionListView(CheckGreaterPrivilegeMixin, ListView):
+    least_privilege = COURSEMEMBER_TEACHER
+
     paginate_by = 10
     template_name = 'homeworks/submission_list.html'
     context_object_name = 'submission_list'
 
+    def dispatch(self, request, *args, **kwargs):
+        self.task_id = kwargs["task_id"]
+
+        course = Task.objects.get(pk=self.task_id).course
+        self.course_id = course.pk
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
         user = self.request.user
-        task_id = self.kwargs['task_id']
-        return Submission.objects.filter(task__pk=task_id)
+        return Submission.objects.filter(task__pk=self.task_id)
 
     def get_context_data(self, *args, object_list=None, **kwargs):
         context = super().get_context_data(*args, object_list=object_list, **kwargs)
         context['title'] = "Submission List"
-        context['task_id'] = self.kwargs['task_id']
+        context['task_id'] = self.task_id
         return context
 
     def get(self, request, task_id):
@@ -204,11 +219,20 @@ class SubmissionListView(ListView):
         # Authorized user
         return super(SubmissionListView, self).get(self, request)
 
-class SubmissionCommentUpdateView(UpdateView):
+class SubmissionCommentUpdateView(CheckGreaterPrivilegeMixin, UpdateView):
+    least_privilege = COURSEMEMBER_TEACHER
+
     model = Submission
     fields = ["status", "score", "comment"]
     success_url = "/"
     template_name = "homeworks/submission_update.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.submission_id = kwargs["pk"]
+
+        self.course_id = Submission.objects.get(pk=self.submission_id).task.course.pk
+        print("Submission({}) with Course({})".format(self.submission_id, self.course_id))
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -236,20 +260,26 @@ class SubmissionCommentUpdateView(UpdateView):
     def get(self, request, *args, **kwargs):
         return super(SubmissionCommentUpdateView, self).get(self, request, *args, **kwargs)
 
-class TaskUpdateView(UpdateView):
+class TaskUpdateView(CheckGreaterPrivilegeMixin, UpdateView):
+    least_privilege = COURSEMEMBER_TEACHER
+
     model = Task
     fields = ["title", "description", "tips", "answer", "status", "close_date", "auxiliary_file"]
     # To be change
     success_url = "/"
     template_name = "homeworks/task_update.html"
 
+    def dispatch(self, request, *args, **kwargs):
+        self.task_id = kwargs["pk"]
+        task = Task.objects.get(pk=self.task_id)
+        self.course_id = task.course.pk
+        return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['task_id'] = self.object.pk
         context['title'] = "Task Update"
-
         return context
-
 
     def form_valid(self, form):
         self.success_url = reverse("courses:task_detail", args=[self.object.pk])

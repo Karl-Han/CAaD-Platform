@@ -102,12 +102,12 @@ def course_homepage(request, course_id):
     return render(request, "courses/homepage.html", context=context)
 
 
-class EditCourseView(SetLoginRequiredMixin, CheckGreaterPrivilegeMixin, UpdateView):
+class EditCourseView(CheckGreaterPrivilegeMixin, UpdateView):
+    least_privilege = COURSEMEMBER_ADMIN
+
     model = Course
     fields = ['name', 'password', 'description', 'is_open']
-    # success_url = "/"
     template_name = "courses/update.html"
-    least_privilege = COURSEMEMBER_ADMIN
 
     def dispatch(self, request, *args, **kwargs):
         self.course_id = kwargs["pk"]
@@ -143,7 +143,7 @@ def joinCourse(request, course_id):
     return return_error(request, FORM_NOT_VALID)
 
 
-class StudentsListView(SetLoginRequiredMixin, CheckGreaterPrivilegeMixin, ListView):
+class StudentsListView(CheckGreaterPrivilegeMixin, ListView):
     paginate_by = 10
     template_name = 'courses/students.html'
     context_object_name = 'student_list'
