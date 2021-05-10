@@ -40,7 +40,7 @@
             <td>: {{ owner_aux.uid | default:"N/A" }}</td>
         </tr>
     </table>
-    <a href="{% url 'users:edit' owner.pk %}">Edit Information</a>
+    <a href="{% url 'users:edit' %}">Edit Information</a>
 {% endif %}
 
 {% endblock content %}

@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<form action="{% url 'users:edit' user.pk %}" method="post">
+<form action="{% url 'users:edit' %}" method="post">
     {% csrf_token %}
 
     {% if form.non_field_errors %}

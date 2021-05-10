@@ -34,9 +34,9 @@
             <a href="{% url 'users:profile' user.username %}">
             {{ user.username }}
             </a>
-            . <a href="{% url 'users:logout_view' %}">Logout</a>
+            . <a href="{% url 'users:logout' %}">Logout</a>
             {% else %}
-            Anonymous User. <a href="{% url 'users:login' %}">Login</a>
+            Anonymous User. <a href="{% url 'login' %}">Login</a>
             {% endif %}
         {% endblock status %}
 

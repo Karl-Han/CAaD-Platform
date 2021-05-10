@@ -6,11 +6,12 @@ from django.views import View
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
+from django.contrib.auth.mixins import UserPassesTestMixin
 
 from courses.models import Course, CourseMember
+from utils.check import SetLoginRequiredMixin
 from .models import UserAuxiliary
 from .forms import UserForm, LoginForm, EditForm
-
 from .utils import get_enrolled_courses
 
 class SignupView(View):
@@ -34,7 +35,7 @@ class SignupView(View):
             obj = form.save()
             obj.auxiliary = UserAuxiliary(user=obj)
             obj.auxiliary.save()
-            return HttpResponseRedirect(reverse("users:login"))
+            return HttpResponseRedirect(reverse("login"))
 
         context = self.get_context_data()
         context["form"] = form
@@ -88,19 +89,19 @@ def profile(request, username):
 
     return render(request, 'users/profile.html', context)
 
-def logout_view(request):
+def logout_func(request):
     logout(request)
     return redirect(request.META['HTTP_REFERER'])
 
-class EditUserInfo(View):
+class EditUserInfoView(SetLoginRequiredMixin, View):
     template_name = "users/edit.html"
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, *args, **kwargs):
         context = {}
         context["title"] = "Edit User Info"
         return context
     
-    def get(self, request, user_id):
+    def get(self, request):
         # Do authentication elsewhere
         context = self.get_context_data()
 
@@ -110,24 +111,23 @@ class EditUserInfo(View):
 
         return render(request, self.template_name, context)
 
-    def post(self, request, user_id):
+    def post(self, request):
         # Do authentication elsewhere
         context = self.get_context_data()
         form = EditForm(request.POST)
 
         if form.is_valid():
-            if user_id == request.user.pk:
-                user = request.user
-                data = form.cleaned_data
+            user = request.user
+            data = form.cleaned_data
 
-                user.email = data['email']
-                user.auxiliary.realname = data['realname']
-                user.auxiliary.uid = data['uid']
+            user.email = data['email']
+            user.auxiliary.realname = data['realname']
+            user.auxiliary.uid = data['uid']
 
-                user.save()
-                user.auxiliary.save()
-                messages.info(request, "Successfully update")
-                return redirect(reverse("users:profile", args=[user.username]))
+            user.save()
+            user.auxiliary.save()
+            messages.info(request, "Successfully update")
+            return redirect(reverse("users:profile", args=[user.username]))
         context['form'] = form
 
         return render(request, self.template_name, context)
