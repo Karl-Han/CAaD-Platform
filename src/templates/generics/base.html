@@ -52,6 +52,7 @@
                 <a class="nav-link" href='{% url "index" %}'>Homepage</a>
             </li>
             {% block navigation %}
+            {% if user.is_authenticated %}
             <li class="nav-item">
                 <a class="nav-link" href='{% url "courses:studying_list_my" %}'>My Studying</a>
             </li>
@@ -59,6 +60,7 @@
                 <a class="nav-link" href='{% url "courses:tasks_list_my" %}'>My Tasks</a>
             </li>
 
+            {% endif %}
             {% if user.is_staff %}
             <li class="nav-item">
                 <a class="nav-link" href='{% url "courses:teaching_list_my" %}'>My Teaching</a>
