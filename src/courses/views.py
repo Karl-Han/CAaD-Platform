@@ -8,13 +8,13 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 
 from users.models import User
 from utils.general import error_not_authenticated, return_error, info
-from .models import Course, CourseMember
-from .forms import CreateCourseForm, JoinForm
 from courses.utils import *
 
-from .utils import getRandCPwd
 from utils.check import SetLoginRequiredMixin, CheckGreaterPrivilegeMixin
 from utils.params import *
+from .models import Course, CourseMember
+from .forms import CreateCourseForm, JoinForm
+from .utils import getRandCPwd
 # from .signals import update_user_privilege_signal
 
 class PlatformHomepageView(ListView):

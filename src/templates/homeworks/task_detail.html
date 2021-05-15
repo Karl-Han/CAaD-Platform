@@ -87,7 +87,7 @@
         <td>Score</td>
         <td>
         {% if submission.score %}
-            submission.score
+            {{ submission.score }}
         {% else %}
             <div style='color=red'>Not given yet.</div>
         {% endif %}

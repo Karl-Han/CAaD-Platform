@@ -39,9 +39,9 @@
                 Student List
             </a>
             <br>
-            <a href="{% url 'courses:task_list' course.pk %}" class="btn btn-primary col-3" style="height: max-content;">
+            {% comment %} <a href="{% url 'courses:task_list' course.pk %}" class="btn btn-primary col-3" style="height: max-content;">
                 Review Submissions
-            </a>
+            </a> {% endcomment %}
         </div>
     {% endif %}
 
